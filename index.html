@@ -61,6 +61,16 @@
                 </div>
 
                 <div class="header-actions">
+                    <!-- Statistics Button -->
+                    <button class="achievements-toggle-btn stats-toggle-btn" id="stats-toggle" aria-label="Ver estadísticas" title="Ver estadísticas">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                        <span class="stats-toggle-label">Estadísticas</span>
+                    </button>
+
                     <!-- Achievements Button -->
                     <button class="achievements-toggle-btn" id="achievements-toggle" aria-label="Ver logros" title="Ver logros">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -710,6 +720,7 @@
                 <button class="ach-cat-btn" data-category="velocidad">⚡ Velocidad</button>
                 <button class="ach-cat-btn" data-category="precision">🎯 Precisión</button>
                 <button class="ach-cat-btn" data-category="vidas">❤️ Supervivencia</button>
+                <button class="ach-cat-btn" data-category="modos">🎮 Modos</button>
                 <button class="ach-cat-btn" data-category="persistencia">👑 Persistencia</button>
             </div>
 
@@ -720,11 +731,34 @@
         </div>
     </div>
 
+    <!-- Statistics Modal / Panel -->
+    <div id="stats-modal" class="achievements-modal-overlay hidden">
+        <div class="achievements-panel stats-panel glass-card">
+            <div class="achievements-header">
+                <div class="achievements-title-group">
+                    <div class="achievements-icon-main">📊</div>
+                    <div>
+                        <h2 class="achievements-title">Estadísticas</h2>
+                        <p class="achievements-subtitle">Tu progreso, tus récords y tus puntos débiles</p>
+                    </div>
+                </div>
+                <button class="achievements-close-btn" id="stats-close" aria-label="Cerrar estadísticas">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="stats-body" id="stats-body"></div>
+        </div>
+    </div>
+
     <!-- Achievement Toast Container -->
     <div id="achievement-container" class="achievement-container"></div>
 
     <!-- Scripts -->
     <script src="texts.js"></script>
+    <script src="stats.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

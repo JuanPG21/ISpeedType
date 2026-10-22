@@ -177,7 +177,8 @@
     // Cargar estadísticas guardadas del usuario
     let userStats = {
         testsCompleted: 0,
-        maxWordStreak: 0
+        maxWordStreak: 0,
+        modesDone: {}          // modos especiales completados al menos una vez (logro Todoterreno)
     };
 
     try {
@@ -187,6 +188,17 @@
         }
     } catch (err) {
         console.warn('Error reading speedtype-user-stats:', err);
+    }
+
+    // ===== Estadísticas por tecla de la partida en curso: { letra: [pulsaciones, fallos] } =====
+    let sessionKeys = {};
+
+    function trackKey(expectedChar, ok) {
+        if (!expectedChar || expectedChar === ' ' || expectedChar === '\n') return;
+        const k = expectedChar.toLowerCase();
+        const entry = sessionKeys[k] || (sessionKeys[k] = [0, 0]);
+        entry[0]++;
+        if (!ok) entry[1]++;
     }
 
     // ===== Storm Mode State =====
@@ -746,6 +758,7 @@
 
         // Reset lives for this round
         currentLives = maxLives;
+        sessionKeys = {};
 
         if (timerInterval) {
             clearInterval(timerInterval);
@@ -1016,6 +1029,7 @@
                     // Normal key comparison
                     typedChars.push(char);
                     totalKeystrokes++;
+                    trackKey(expectedChar, char === expectedChar);
 
                     if (char === expectedChar) {
                         correctKeystrokes++;
@@ -1484,180 +1498,96 @@
     }
 
     // ===== ACHIEVEMENTS DEFINITION & DATA =====
+    // Escalones (umbral → id) usados tanto para desbloquear como para migrar progreso antiguo
+    const LADDER_RACHAS = [[10, 'racha-10'], [30, 'racha-bronce'], [60, 'racha-60'], [90, 'racha-plata'], [150, 'racha-150'],
+                           [200, 'racha-oro'], [300, 'racha-300'], [500, 'racha-platino'], [750, 'racha-750'], [1000, 'racha-divina']];
+    const LADDER_WPM = [[30, 'wpm-30'], [40, 'wpm-40'], [50, 'wpm-50'], [60, 'wpm-60'], [80, 'wpm-80'], [100, 'wpm-100']];
+    const WPM_ULTRA = 110; // "Ultra Instinto": se desbloquea al SUPERAR este valor
+    const LADDER_PRECISION = [[25, 'acc-25'], [50, 'acc-50'], [100, 'acc-100'], [150, 'acc-150']]; // palabras mínimas con 100%
+    const LADDER_TESTS = [[1, 'tests-1'], [10, 'tests-10'], [25, 'tests-25'], [50, 'tests-50'], [100, 'tests-100'],
+                          [250, 'tests-250'], [500, 'tests-500'], [1000, 'tests-1000']];
+    const LADDER_DIAS = [[3, 'dias-3'], [7, 'dias-7'], [14, 'dias-14'], [30, 'dias-30']];
+    const ID_VIDAS = { 10: 'survivor-easy', 5: 'survivor-med', 3: 'survivor-hard', 1: 'survivor-exp' };
+    const ID_FADE = { 20: 'fade-20', 40: 'fade-40', 60: 'fade-60', 80: 'fade-80' };
+    const ID_STORM = { 5000: 'storm-facil', 4000: 'storm-medio', 2500: 'storm-pro', 1500: 'storm-hardcore' };
+    const ID_DEAD = { 2: 'dead-2', 3: 'dead-3', 4: 'dead-4', 5: 'dead-5' };
+
+    // Logros de versiones anteriores que ahora se representan con otro id
+    const LEGACY_ACH_ALIASES = { 'wpm-120': 'wpm-110', 'wpm-160': 'wpm-110' };
+
+    function ach(id, titulo, descripcion, categoria, icono) {
+        return { id, titulo, descripcion, categoria, icono, completado: false, fecha: null };
+    }
+
     const ACHIEVEMENTS_LIST = [
-        // 1. Categoría: Rachas de Palabras Correctas Seguidas (Sin cometer errores)
-        {
-            id: 'racha-bronce',
-            titulo: 'Racha Bronce',
-            descripcion: 'Conseguir una racha de 30 palabras seguidas sin cometer errores.',
-            categoria: 'rachas',
-            icono: '🥉',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'racha-plata',
-            titulo: 'Racha Plata',
-            descripcion: 'Conseguir una racha de 90 palabras seguidas sin cometer errores.',
-            categoria: 'rachas',
-            icono: '🥈',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'racha-oro',
-            titulo: 'Racha Oro',
-            descripcion: 'Conseguir una racha de 200 palabras seguidas sin cometer errores.',
-            categoria: 'rachas',
-            icono: '🥇',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'racha-platino',
-            titulo: 'Racha Platino',
-            descripcion: 'Conseguir una racha de 500 palabras seguidas sin cometer errores.',
-            categoria: 'rachas',
-            icono: '💎',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'racha-divina',
-            titulo: 'Racha Divina',
-            descripcion: 'Conseguir una racha de 1000 palabras seguidas (Dificultad extrema).',
-            categoria: 'rachas',
-            icono: '👑',
-            completado: false,
-            fecha: null
-        },
+        // 1. Rachas de palabras correctas seguidas (sin cometer errores)
+        ach('racha-10', 'Calentando Motores', 'Conseguir una racha de 10 palabras seguidas sin cometer errores.', 'rachas', '🔥'),
+        ach('racha-bronce', 'Racha Bronce', 'Conseguir una racha de 30 palabras seguidas sin cometer errores.', 'rachas', '🥉'),
+        ach('racha-60', 'Ritmo Perfecto', 'Conseguir una racha de 60 palabras seguidas sin cometer errores.', 'rachas', '🎶'),
+        ach('racha-plata', 'Racha Plata', 'Conseguir una racha de 90 palabras seguidas sin cometer errores.', 'rachas', '🥈'),
+        ach('racha-150', 'Racha Esmeralda', 'Conseguir una racha de 150 palabras seguidas sin cometer errores.', 'rachas', '💚'),
+        ach('racha-oro', 'Racha Oro', 'Conseguir una racha de 200 palabras seguidas sin cometer errores.', 'rachas', '🥇'),
+        ach('racha-300', 'Racha Zafiro', 'Conseguir una racha de 300 palabras seguidas sin cometer errores.', 'rachas', '🔷'),
+        ach('racha-platino', 'Racha Platino', 'Conseguir una racha de 500 palabras seguidas sin cometer errores.', 'rachas', '💎'),
+        ach('racha-750', 'Racha Mítica', 'Conseguir una racha de 750 palabras seguidas sin cometer errores.', 'rachas', '🐉'),
+        ach('racha-divina', 'Racha Divina', 'Conseguir una racha de 1000 palabras seguidas (dificultad extrema).', 'rachas', '👑'),
 
-        // 2. Categoría: Velocidad Pura (Palabras por Minuto - WPM)
-        {
-            id: 'wpm-40',
-            titulo: 'Velocidad Crucero',
-            descripcion: 'Alcanzar 40 WPM en una prueba completada.',
-            categoria: 'velocidad',
-            icono: '🚗',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'wpm-60',
-            titulo: 'Mecanógrafo Veloz',
-            descripcion: 'Alcanzar 60 WPM en una prueba completada.',
-            categoria: 'velocidad',
-            icono: '⚡',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'wpm-80',
-            titulo: 'Rompiendo la Barrera',
-            descripcion: 'Alcanzar 80 WPM en una prueba completada.',
-            categoria: 'velocidad',
-            icono: '🚀',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'wpm-120',
-            titulo: 'Modo Dios',
-            descripcion: 'Alcanzar 120 WPM en una prueba completada.',
-            categoria: 'velocidad',
-            icono: '🔮',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'wpm-160',
-            titulo: 'Inalcanzable',
-            descripcion: 'Alcanzar 160 WPM o más en una prueba completada.',
-            categoria: 'velocidad',
-            icono: '🌌',
-            completado: false,
-            fecha: null
-        },
+        // 2. Velocidad pura (WPM) — escalones graduales hasta Ultra Instinto
+        ach('wpm-30', 'Primeros Pasos', 'Alcanzar 30 WPM en una prueba completada.', 'velocidad', '🐢'),
+        ach('wpm-40', 'Velocidad Crucero', 'Alcanzar 40 WPM en una prueba completada.', 'velocidad', '🚗'),
+        ach('wpm-50', 'Ritmo Constante', 'Alcanzar 50 WPM en una prueba completada.', 'velocidad', '🏃'),
+        ach('wpm-60', 'Mecanógrafo Veloz', 'Alcanzar 60 WPM en una prueba completada.', 'velocidad', '⚡'),
+        ach('wpm-80', 'Rompiendo la Barrera', 'Alcanzar 80 WPM en una prueba completada.', 'velocidad', '🚀'),
+        ach('wpm-100', 'Modo Dios', 'Alcanzar 100 WPM en una prueba completada.', 'velocidad', '🔮'),
+        ach('wpm-110', 'Ultra Instinto', 'Superar los 110 WPM en una prueba completada.', 'velocidad', '🌌'),
 
-        // 3. Categoría: Precisión Perfecta (100% Accuracy)
-        {
-            id: 'acc-50',
-            titulo: 'Cirujano del Teclado',
-            descripcion: 'Terminar un texto de más de 50 palabras con 100% de precisión.',
-            categoria: 'precision',
-            icono: '🎯',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'acc-150',
-            titulo: 'Mente Fría',
-            descripcion: 'Terminar un texto de más de 150 palabras con 100% de precisión.',
-            categoria: 'precision',
-            icono: '❄️',
-            completado: false,
-            fecha: null
-        },
+        // 3. Precisión perfecta (100% de acierto según la longitud del texto)
+        ach('acc-25', 'Pulso Firme', 'Terminar un texto de al menos 25 palabras con 100% de precisión.', 'precision', '🧘'),
+        ach('acc-50', 'Cirujano del Teclado', 'Terminar un texto de al menos 50 palabras con 100% de precisión.', 'precision', '🎯'),
+        ach('acc-100', 'Mano de Relojero', 'Terminar un texto de al menos 100 palabras con 100% de precisión.', 'precision', '🔬'),
+        ach('acc-150', 'Mente Fría', 'Terminar un texto de al menos 150 palabras con 100% de precisión.', 'precision', '❄️'),
 
-        // 4. Categoría: Modo Vidas (Supervivencia)
-        {
-            id: 'survivor-med',
-            titulo: 'Sobreviviente',
-            descripcion: 'Completar un texto en dificultad "Medio" (5 vidas) sin morir.',
-            categoria: 'vidas',
-            icono: '🛡️',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'survivor-exp',
-            titulo: 'Inmortal',
-            descripcion: 'Completar un texto en dificultad "Experto" (1 vida) con éxito.',
-            categoria: 'vidas',
-            icono: '💀',
-            completado: false,
-            fecha: null
-        },
+        // 4. Modo Vidas (supervivencia) — todas las dificultades
+        ach('survivor-easy', 'Aprendiz de Supervivencia', 'Completar un texto en dificultad "Fácil" (10 vidas) sin morir.', 'vidas', '🌱'),
+        ach('survivor-med', 'Sobreviviente', 'Completar un texto en dificultad "Medio" (5 vidas) sin morir.', 'vidas', '🛡️'),
+        ach('survivor-hard', 'Cuerpo de Acero', 'Completar un texto en dificultad "Difícil" (3 vidas) sin morir.', 'vidas', '⚔️'),
+        ach('survivor-exp', 'Inmortal', 'Completar un texto en dificultad "Hardcore" (1 vida) con éxito.', 'vidas', '💀'),
+        ach('survivor-flawless', 'Intocable', 'Completar un texto en dificultad "Medio" o superior sin perder ni una sola vida.', 'vidas', '✨'),
+        ach('survivor-last', 'Por los Pelos', 'Completar un texto en "Fácil", "Medio" o "Difícil" con exactamente 1 vida restante.', 'vidas', '😅'),
 
-        // 5. Categoría: Persistencia (Consistencia en el tiempo)
-        {
-            id: 'tests-10',
-            titulo: 'Adicto al Click',
-            descripcion: 'Completar 10 pruebas en total.',
-            categoria: 'persistencia',
-            icono: '⌨️',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'tests-100',
-            titulo: 'Leyenda Local',
-            descripcion: 'Completar 100 pruebas en total.',
-            categoria: 'persistencia',
-            icono: '🏆',
-            completado: false,
-            fecha: null
-        },
-        {
-            id: 'tests-500',
-            titulo: 'Gran Maestro',
-            descripcion: 'Completar 500 pruebas en total.',
-            categoria: 'persistencia',
-            icono: '🌟',
-            completado: false,
-            fecha: null
-        },
-        // 6. Categoría: Modo Aprendizaje desde Cero
-        {
-            id: 'tutor-master',
-            titulo: 'Graduado del Teclado',
-            descripcion: 'Completar con éxito los 6 niveles del Modo Aprendizaje desde Cero.',
-            categoria: 'persistencia',
-            icono: '🎓',
-            completado: false,
-            fecha: null
-        }
+        // 5. Modos especiales — cada dificultad de cada modo
+        ach('fade-20', 'Eco Tenue', 'Completar un texto en Modo Desvanecimiento a velocidad "Lento" (20 WPM).', 'modos', '🌫️'),
+        ach('fade-40', 'Sombra Persistente', 'Completar un texto en Modo Desvanecimiento a velocidad "Medio" (40 WPM).', 'modos', '👻'),
+        ach('fade-60', 'Cazador de Sombras', 'Completar un texto en Modo Desvanecimiento a velocidad "Rápido" (60 WPM).', 'modos', '🕯️'),
+        ach('fade-80', 'Dueño de la Sombra', 'Completar un texto en Modo Desvanecimiento a velocidad "Pro" (80 WPM).', 'modos', '🌑'),
+        ach('storm-facil', 'Llovizna', 'Completar un texto en Tormenta Eléctrica con intensidad "Fácil".', 'modos', '🌦️'),
+        ach('storm-medio', 'Aguacero', 'Completar un texto en Tormenta Eléctrica con intensidad "Medio".', 'modos', '🌧️'),
+        ach('storm-pro', 'Tempestad', 'Completar un texto en Tormenta Eléctrica con intensidad "Pro".', 'modos', '⛈️'),
+        ach('storm-hardcore', 'Ojo del Huracán', 'Completar un texto en Tormenta Eléctrica con intensidad "Hardcore".', 'modos', '🌪️'),
+        ach('dead-2', 'Dedos Ágiles', 'Completar un texto en Punto Muerto con 2 teclas rotas.', 'modos', '🔓'),
+        ach('dead-3', 'Esquivando Teclas', 'Completar un texto en Punto Muerto con 3 teclas rotas.', 'modos', '🔒'),
+        ach('dead-4', 'Maestro del Salto', 'Completar un texto en Punto Muerto con 4 teclas rotas.', 'modos', '🧩'),
+        ach('dead-5', 'Teclado Fantasma', 'Completar un texto en Punto Muerto con 5 teclas rotas.', 'modos', '🕳️'),
+        ach('todoterreno', 'Todoterreno', 'Completar al menos una prueba en cada modo especial: Vidas, Desvanecimiento, Tormenta y Punto Muerto.', 'modos', '🧭'),
+
+        // 6. Persistencia (constancia en pruebas y en días)
+        ach('tests-1', 'Primer Paso', 'Completar tu primera prueba.', 'persistencia', '👣'),
+        ach('tests-10', 'Adicto al Click', 'Completar 10 pruebas en total.', 'persistencia', '⌨️'),
+        ach('tests-25', 'Tomando Ritmo', 'Completar 25 pruebas en total.', 'persistencia', '🥁'),
+        ach('tests-50', 'Medio Centenar', 'Completar 50 pruebas en total.', 'persistencia', '🎖️'),
+        ach('tests-100', 'Leyenda Local', 'Completar 100 pruebas en total.', 'persistencia', '🏆'),
+        ach('tests-250', 'Veterano del Teclado', 'Completar 250 pruebas en total.', 'persistencia', '🏅'),
+        ach('tests-500', 'Gran Maestro', 'Completar 500 pruebas en total.', 'persistencia', '🌟'),
+        ach('tests-1000', 'Leyenda Inmortal', 'Completar 1000 pruebas en total.', 'persistencia', '🗿'),
+        ach('dias-3', 'Hábito en Marcha', 'Jugar 3 días seguidos.', 'persistencia', '📆'),
+        ach('dias-7', 'Semana Completa', 'Jugar 7 días seguidos.', 'persistencia', '🗓️'),
+        ach('dias-14', 'Quincena Imparable', 'Jugar 14 días seguidos.', 'persistencia', '🌓'),
+        ach('dias-30', 'Mes Imparable', 'Jugar 30 días seguidos.', 'persistencia', '🌕'),
+        ach('tutor-master', 'Graduado del Teclado', 'Completar con éxito los 6 niveles del Modo Aprendizaje desde Cero.', 'persistencia', '🎓')
     ];
+
+    // El panel de Estadísticas muestra el progreso de logros por categoría
+    if (window.SpeedStats) window.SpeedStats.setAchievementsProvider(() => ACHIEVEMENTS_LIST);
 
     // ===== ACHIEVEMENTS HELPERS & STORAGE =====
     function loadAchievementsFromStorage() {
@@ -1665,16 +1595,50 @@
             const stored = localStorage.getItem('speedtype-achievements-data');
             if (stored) {
                 const data = JSON.parse(stored);
-                ACHIEVEMENTS_LIST.forEach(ach => {
-                    if (data[ach.id] && data[ach.id].completado) {
-                        ach.completado = true;
-                        ach.fecha = data[ach.id].fecha || null;
+                Object.keys(data).forEach(savedId => {
+                    if (!data[savedId] || !data[savedId].completado) return;
+                    const target = ACHIEVEMENTS_LIST.find(a => a.id === (LEGACY_ACH_ALIASES[savedId] || savedId));
+                    if (target && !target.completado) {
+                        target.completado = true;
+                        target.fecha = data[savedId].fecha || null;
                     }
                 });
             }
+            migrateAchievementProgress();
         } catch (e) {
             console.warn('Error loading achievements from storage:', e);
         }
+    }
+
+    // Rellena los escalones inferiores de cada escalera y concede los logros que tus
+    // estadísticas guardadas ya cumplen (así nadie pierde progreso al añadir niveles).
+    function migrateAchievementProgress() {
+        const byId = id => ACHIEVEMENTS_LIST.find(a => a.id === id);
+        const hoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+        let changed = false;
+
+        const marcar = (id, fecha) => {
+            const a = byId(id);
+            if (a && !a.completado) { a.completado = true; a.fecha = fecha || hoy; changed = true; }
+        };
+
+        // Si el escalón más alto ya está ganado, todos los de abajo también
+        const rellenar = (ids) => {
+            let top = -1;
+            ids.forEach((id, i) => { const a = byId(id); if (a && a.completado) top = i; });
+            for (let i = 0; i < top; i++) marcar(ids[i], byId(ids[top]).fecha);
+        };
+        rellenar(LADDER_WPM.map(r => r[1]).concat('wpm-110'));
+        rellenar(LADDER_PRECISION.map(r => r[1]));
+        rellenar(LADDER_RACHAS.map(r => r[1]));
+        rellenar(LADDER_TESTS.map(r => r[1]));
+        rellenar(LADDER_DIAS.map(r => r[1]));
+
+        // Escalones que tus estadísticas guardadas ya cumplen
+        LADDER_RACHAS.forEach(([n, id]) => { if (userStats.maxWordStreak >= n) marcar(id); });
+        LADDER_TESTS.forEach(([n, id]) => { if (userStats.testsCompleted >= n) marcar(id); });
+
+        if (changed) saveAchievementsToStorage();
     }
 
     function saveAchievementsToStorage() {
@@ -1806,11 +1770,9 @@
     }
 
     function checkStreakAchievements() {
-        if (currentWordStreak >= 30) unlockAchievement('racha-bronce');
-        if (currentWordStreak >= 90) unlockAchievement('racha-plata');
-        if (currentWordStreak >= 200) unlockAchievement('racha-oro');
-        if (currentWordStreak >= 500) unlockAchievement('racha-platino');
-        if (currentWordStreak >= 1000) unlockAchievement('racha-divina');
+        LADDER_RACHAS.forEach(([n, id]) => {
+            if (currentWordStreak >= n) unlockAchievement(id);
+        });
     }
 
     function checkAllAchievements(stats) {
@@ -1818,35 +1780,47 @@
 
         const totalWordsInText = originalText.trim().split(/\s+/).filter(Boolean).length;
 
-        // --- Categoría: Velocidad Pura ---
-        if (stats.wpm >= 40) unlockAchievement('wpm-40');
-        if (stats.wpm >= 60) unlockAchievement('wpm-60');
-        if (stats.wpm >= 80) unlockAchievement('wpm-80');
-        if (stats.wpm >= 120) unlockAchievement('wpm-120');
-        if (stats.wpm >= 160) unlockAchievement('wpm-160');
+        // --- Velocidad pura ---
+        LADDER_WPM.forEach(([min, id]) => { if (stats.wpm >= min) unlockAchievement(id); });
+        if (stats.wpm > WPM_ULTRA) unlockAchievement('wpm-110');
 
-        // --- Categoría: Precisión Perfecta ---
-        if (stats.accuracy === 100 && totalWordsInText >= 50) {
-            unlockAchievement('acc-50');
-        }
-        if (stats.accuracy === 100 && totalWordsInText >= 150) {
-            unlockAchievement('acc-150');
+        // --- Precisión perfecta ---
+        if (stats.accuracy === 100) {
+            LADDER_PRECISION.forEach(([minWords, id]) => {
+                if (totalWordsInText >= minWords) unlockAchievement(id);
+            });
         }
 
-        // --- Categoría: Modo Vidas (Supervivencia) ---
-        if (isLivesMode && !stats.isGameOver) {
-            if (maxLives === 5) {
-                unlockAchievement('survivor-med');
-            }
-            if (maxLives === 1) {
-                unlockAchievement('survivor-exp');
-            }
+        // --- Modo Vidas: un logro por dificultad + logros de estilo ---
+        if (isLivesMode) {
+            unlockAchievement(ID_VIDAS[maxLives]);
+            if (maxLives <= 5 && currentLives === maxLives) unlockAchievement('survivor-flawless');
+            if (maxLives >= 3 && currentLives === 1) unlockAchievement('survivor-last');
         }
 
-        // --- Categoría: Persistencia ---
-        if (userStats.testsCompleted >= 10) unlockAchievement('tests-10');
-        if (userStats.testsCompleted >= 100) unlockAchievement('tests-100');
-        if (userStats.testsCompleted >= 500) unlockAchievement('tests-500');
+        // --- Modos especiales: un logro por dificultad ---
+        if (isFadeMode) unlockAchievement(ID_FADE[fadeWpm]);
+        if (isStormMode) unlockAchievement(ID_STORM[stormIntervalMs]);
+        if (isDeadzoneMode) unlockAchievement(ID_DEAD[deadKeysCount]);
+
+        // --- Todoterreno: al menos una prueba completada en cada modo especial ---
+        if (isEligibleForAchievements) {
+            userStats.modesDone = userStats.modesDone || {};
+            if (isLivesMode) userStats.modesDone.vidas = true;
+            if (isFadeMode) userStats.modesDone.desvanecer = true;
+            if (isStormMode) userStats.modesDone.tormenta = true;
+            if (isDeadzoneMode) userStats.modesDone.punto = true;
+            saveUserStats();
+            const d = userStats.modesDone;
+            if (d.vidas && d.desvanecer && d.tormenta && d.punto) unlockAchievement('todoterreno');
+        }
+
+        // --- Persistencia: pruebas totales y días seguidos ---
+        LADDER_TESTS.forEach(([n, id]) => { if (userStats.testsCompleted >= n) unlockAchievement(id); });
+        if (window.SpeedStats) {
+            const racha = window.SpeedStats.dayStreaks().current;
+            LADDER_DIAS.forEach(([n, id]) => { if (racha >= n) unlockAchievement(id); });
+        }
     }
 
     function showAchievementToast(icon, title, desc) {
@@ -1874,6 +1848,35 @@
                 }
             }, 400);
         }, 4000);
+    }
+
+    // ===== Historial de partidas (alimenta el panel de Estadísticas) =====
+    function difficultyLabel() {
+        if (isLivesMode) return maxLives + (maxLives === 1 ? ' vida' : ' vidas');
+        if (isFadeMode) return fadeWpm + ' WPM';
+        if (isStormMode) return stormCharCount + (stormCharCount === 1 ? ' letra' : ' letras') + ' / ' + (stormIntervalMs / 1000) + 's';
+        if (isDeadzoneMode) return deadKeysCount + ' teclas';
+        return '';
+    }
+
+    function registrarPartida(result, wpm, accuracy, elapsed) {
+        if (!window.SpeedStats || !isEligibleForAchievements) return;
+        try {
+            window.SpeedStats.record({
+                result,
+                wpm,
+                acc: accuracy,
+                secs: elapsed,
+                errors: totalErrors,
+                chars: result === 'ok' ? characters.length : typedChars.length,
+                words: originalText.trim().split(/\s+/).filter(Boolean).length,
+                mode: nombreModoActual(),
+                dif: difficultyLabel(),
+                keys: sessionKeys
+            });
+        } catch (err) {
+            console.warn('No se pudo registrar la partida:', err);
+        }
     }
 
     // ===== Game Over by Ghost Collision (Fade Mode) =====
@@ -1905,6 +1908,7 @@
         // Cyan ghost-over style
         resultsCard.classList.remove('game-over-state');
         resultsCard.classList.add('ghost-over-state');
+        registrarPartida('ghost', wpm, accuracy, elapsed);
         resultsTitle.textContent = '¡Te atrapó la sombra!';
         resultsSubtitle.textContent = 'El desvanecimiento alcanzó una letra incorrecta o te quedaste atrás';
 
@@ -1949,6 +1953,9 @@
         resultTime.textContent = formatTime(elapsed);
         resultErrors.textContent = totalErrors;
 
+        // Guardar la partida en el historial ANTES de evaluar logros (los de días seguidos lo usan)
+        registrarPartida('ok', wpm, accuracy, elapsed);
+
         // Evaluar logros de fin de prueba
         checkAllAchievements({
             wpm: wpm,
@@ -1989,6 +1996,8 @@
         resultAccuracy.textContent = accuracy + '%';
         resultTime.textContent = formatTime(elapsed);
         resultErrors.textContent = totalErrors;
+
+        registrarPartida('gameover', wpm, accuracy, elapsed);
 
         // Style results card as Game Over
         resultsCard.classList.add('game-over-state');
