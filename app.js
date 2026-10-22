@@ -205,9 +205,9 @@
 
     // ===== Initialize =====
     function init() {
-        // Si se recargó la página estando en juego, el historial conserva el estado: se limpia
+        // La página siempre arranca en el lobby: se limpia cualquier estado/ruta de juego (p. ej. tras recargar en #lobby/vidas)
         try {
-            if (history.state && history.state.enJuego) history.replaceState(null, '');
+            history.replaceState(null, '', location.pathname + location.search + '#lobby');
         } catch (e) { /* historial no disponible */ }
 
         // Apply saved theme
@@ -2377,15 +2377,26 @@
         });
     }
 
-    function activarModoJuego(estado) {
+    // Nombre de la "pestaña" (ruta) del modo actual: #lobby/<modo>
+    function nombreModoActual() {
+        if (isTutorMode) return 'aprendizaje';
+        if (isLivesMode) return 'vidas';
+        if (isFadeMode) return 'desvanecer';
+        if (isStormMode) return 'tormenta';
+        if (isDeadzoneMode) return 'punto-muerto';
+        return 'clasico';
+    }
+
+    function activarModoJuego(estado, nombreModo) {
         estado = !!estado;
         const contenedor = document.querySelector('.app-container');
 
         if (estado) {
             if (!modoJuegoActivo) {
                 modoJuegoActivo = true;
-                // Una sola entrada de historial por sesión de juego: "Atrás" vuelve al lobby
-                try { history.pushState({ enJuego: true }, ''); } catch (e) { /* historial no disponible */ }
+                // Cada modo es una "pestaña" del historial: #lobby/<modo>. "Atrás" vuelve a #lobby
+                const modo = nombreModo || nombreModoActual();
+                try { history.pushState({ enJuego: true, modo }, '', '#lobby/' + modo); } catch (e) { /* historial no disponible */ }
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                 document.documentElement.classList.add('modo-juego');
                 document.body.classList.add('modo-juego');
@@ -2464,7 +2475,7 @@
         }
 
         // Lobby (setup) = scroll normal. Cualquier otra pantalla = modo juego.
-        activarModoJuego(name !== 'setup');
+        activarModoJuego(name !== 'setup', nombreModoActual());
     }
 
     // ===== Start App =====
