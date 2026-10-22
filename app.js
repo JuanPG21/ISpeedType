@@ -101,6 +101,7 @@
     const achievementsBarFill = document.getElementById('achievements-bar-fill');
     const achievementsGrid = document.getElementById('achievements-grid');
     const achCatButtons = document.querySelectorAll('.ach-cat-btn');
+    const achievementContainer = document.getElementById('achievement-container');
     // Tutor Mode DOM elements
     const tutorSection = document.getElementById('tutor-section');
     const btnTutorStart = document.getElementById('btn-tutor-start');
@@ -1791,12 +1792,17 @@
         // 3. Sincronizar inmediatamente con localStorage ANTES de cualquier animación o renderizado
         saveAchievementsToStorage();
 
-        // 4. Actualizar la UI del contador y del modal si está visible
-        updateAchievementsBadge();
-        renderAchievementsGrid();
+        // 4-5. UI y notificación: un fallo visual nunca debe interrumpir la partida
+        try {
+            // 4. Actualizar la UI del contador y del modal si está visible
+            updateAchievementsBadge();
+            renderAchievementsGrid();
 
-        // 5. Disparar notificación toast visual
-        showAchievementToast(ach.icono, ach.titulo, ach.descripcion);
+            // 5. Disparar notificación toast visual
+            showAchievementToast(ach.icono, ach.titulo, ach.descripcion);
+        } catch (err) {
+            console.error('Error al mostrar el logro:', err);
+        }
     }
 
     function checkStreakAchievements() {
