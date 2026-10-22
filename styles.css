@@ -276,6 +276,16 @@ body {
     padding: 28px 24px 40px;
 }
 
+/* ===== Modo juego: pantalla estática centrada (el zoom lo calcula activarModoJuego) ===== */
+.modo-juego .app-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    transform-origin: center center;
+    z-index: 1;
+}
+
 /* ===== Header ===== */
 .header {
     text-align: center;

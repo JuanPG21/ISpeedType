@@ -2334,6 +2334,82 @@
         goToSetup();
     }
 
+    // ===== Zoom dinámico y pantalla estática (solo en modo juego) =====
+    const JUEGO_ANCHO_BASE = 860;   // ancho de diseño del contenedor (igual que .app-container en CSS)
+    const JUEGO_ESCALA_MIN = 0.4;   // límite para que nunca quede ilegible
+    const JUEGO_ESCALA_MAX = 1.5;   // límite para pantallas muy grandes
+    let modoJuegoActivo = false;
+    let zoomFrame = 0;
+    let zoomObserver = null;
+
+    function aplicarZoomJuego() {
+        if (!modoJuegoActivo) return;
+        const contenedor = document.querySelector('.app-container');
+        if (!contenedor) return;
+
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // Tamaño base del contenedor (sin transformar): ancho de diseño y alto natural del contenido
+        const baseAncho = Math.min(JUEGO_ANCHO_BASE, vw);
+        contenedor.style.width = baseAncho + 'px';
+        const baseAlto = contenedor.offsetHeight; // offsetHeight ignora transform
+
+        // Escala que hace caber el contenedor completo en la ventana
+        const escala = Math.max(
+            JUEGO_ESCALA_MIN,
+            Math.min(JUEGO_ESCALA_MAX, vw / baseAncho, vh / baseAlto)
+        );
+        contenedor.style.transform = `translate(-50%, -50%) scale(${escala})`;
+    }
+
+    // Agrupa varios eventos de resize en un solo cálculo por frame
+    function programarZoomJuego() {
+        if (zoomFrame) return;
+        zoomFrame = requestAnimationFrame(() => {
+            zoomFrame = 0;
+            aplicarZoomJuego();
+        });
+    }
+
+    function activarModoJuego(estado) {
+        estado = !!estado;
+        const contenedor = document.querySelector('.app-container');
+
+        if (estado) {
+            if (!modoJuegoActivo) {
+                modoJuegoActivo = true;
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                document.documentElement.classList.add('modo-juego');
+                document.body.classList.add('modo-juego');
+                document.documentElement.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden';
+                window.addEventListener('resize', programarZoomJuego);
+                // El alto del juego cambia durante la partida (banners, vidas, combo...)
+                if (contenedor && 'ResizeObserver' in window) {
+                    zoomObserver = new ResizeObserver(programarZoomJuego);
+                    zoomObserver.observe(contenedor);
+                }
+            }
+            aplicarZoomJuego();
+        } else {
+            if (!modoJuegoActivo) return;
+            modoJuegoActivo = false;
+            window.removeEventListener('resize', programarZoomJuego);
+            if (zoomObserver) { zoomObserver.disconnect(); zoomObserver = null; }
+            if (zoomFrame) { cancelAnimationFrame(zoomFrame); zoomFrame = 0; }
+            if (contenedor) {
+                contenedor.style.transform = '';   // escala vuelve a 1
+                contenedor.style.width = '';
+            }
+            document.documentElement.classList.remove('modo-juego');
+            document.body.classList.remove('modo-juego');
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
+        }
+    }
+    window.activarModoJuego = activarModoJuego;
+
     // ===== Show Section =====
     function showSection(name) {
         setupSection.classList.add('hidden');
@@ -2352,6 +2428,9 @@
             target.style.animation = '';
             target.classList.remove('hidden');
         }
+
+        // Lobby (setup) = scroll normal. Cualquier otra pantalla = modo juego.
+        activarModoJuego(name !== 'setup');
     }
 
     // ===== Start App =====
