@@ -306,6 +306,29 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    border-radius: var(--radius-md);
+    transition: transform 0.2s ease;
+}
+
+.logo:hover {
+    transform: translateY(-2px);
+}
+
+.logo:hover .logo-icon {
+    box-shadow: 0 6px 28px var(--accent-glow);
+    transform: scale(1.06) rotate(-4deg);
+}
+
+.logo:active {
+    transform: scale(0.97);
+}
+
+.logo:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 6px;
 }
 
 .logo-icon {
@@ -318,7 +341,7 @@ body {
     border-radius: var(--radius-md);
     color: white;
     box-shadow: 0 4px 20px var(--accent-glow);
-    transition: background 0.4s ease, box-shadow 0.4s ease;
+    transition: background 0.4s ease, box-shadow 0.4s ease, transform 0.25s ease;
 }
 
 .logo-text {

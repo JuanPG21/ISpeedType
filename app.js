@@ -205,6 +205,22 @@
 
     // ===== Initialize =====
     function init() {
+        // Logo (icono + texto): lleva al lobby. En juego usa el historial; en el lobby sube al inicio.
+        const logoHome = document.getElementById('logo-home');
+        if (logoHome) {
+            const irAlInicio = () => {
+                if (modoJuegoActivo) volverAlLobby();
+                else window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+            logoHome.addEventListener('click', irAlInicio);
+            logoHome.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    irAlInicio();
+                }
+            });
+        }
+
         // La página siempre arranca en el lobby: se limpia cualquier estado/ruta de juego (p. ej. tras recargar en #lobby/vidas)
         try {
             history.replaceState(null, '', location.pathname + location.search + '#lobby');
