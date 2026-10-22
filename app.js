@@ -205,6 +205,11 @@
 
     // ===== Initialize =====
     function init() {
+        // Si se recargó la página estando en juego, el historial conserva el estado: se limpia
+        try {
+            if (history.state && history.state.enJuego) history.replaceState(null, '');
+        } catch (e) { /* historial no disponible */ }
+
         // Apply saved theme
         applyTheme(currentTheme);
 
@@ -279,9 +284,9 @@
 
         // --- Controls ---
         restartBtn.addEventListener('click', restartTest);
-        newTextBtn.addEventListener('click', goToSetup);
+        newTextBtn.addEventListener('click', volverAlLobby);
         resultsRestartBtn.addEventListener('click', restartTest);
-        resultsNewBtn.addEventListener('click', goToSetup);
+        resultsNewBtn.addEventListener('click', volverAlLobby);
 
         // Click text display to focus input
         textDisplay.addEventListener('click', () => {
@@ -443,7 +448,7 @@
         }
 
         if (tutorExitBtn) {
-            tutorExitBtn.addEventListener('click', exitTutorMode);
+            tutorExitBtn.addEventListener('click', volverAlLobby);
         }
 
         if (tutorRestartBtn) {
@@ -2379,6 +2384,8 @@
         if (estado) {
             if (!modoJuegoActivo) {
                 modoJuegoActivo = true;
+                // Una sola entrada de historial por sesión de juego: "Atrás" vuelve al lobby
+                try { history.pushState({ enJuego: true }, ''); } catch (e) { /* historial no disponible */ }
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                 document.documentElement.classList.add('modo-juego');
                 document.body.classList.add('modo-juego');
@@ -2409,6 +2416,33 @@
         }
     }
     window.activarModoJuego = activarModoJuego;
+
+    // ===== Navegación con History API (botón "Atrás" del navegador / mouse) =====
+    // Regresa al lobby usando el historial para que todo quede sincronizado.
+    // Si por algún motivo no hay entrada de juego en el historial, vuelve directo.
+    function volverAlLobby() {
+        if (modoJuegoActivo && history.state && history.state.enJuego) {
+            history.back(); // dispara popstate -> transición al lobby
+        } else {
+            salirDelJuego();
+        }
+    }
+
+    // Transición real al lobby (limpia el tutor si estaba activo)
+    function salirDelJuego() {
+        if (isTutorMode) exitTutorMode();
+        else goToSetup();
+    }
+
+    window.addEventListener('popstate', (e) => {
+        if (modoJuegoActivo) {
+            // "Atrás" durante el juego: no se sale de la web, se vuelve al lobby
+            salirDelJuego();
+        } else if (e.state && e.state.enJuego) {
+            // "Adelante" hacia una entrada de juego ya cerrada: no hay partida que restaurar
+            history.back();
+        }
+    });
 
     // ===== Show Section =====
     function showSection(name) {
