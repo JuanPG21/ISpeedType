@@ -3684,3 +3684,175 @@ body.deadzone-active .glass-card.typing-card {
     .stats-toggle-label { display: none; }
     .st-ach-name { width: 120px; }
 }
+
+
+/* ===================================================
+   9. MÓDULO: PIE DE PÁGINA (FOOTER)
+   =================================================== */
+
+.site-footer {
+    position: relative;
+    z-index: 1;
+    margin-top: 40px;
+    padding: 56px 24px 34px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+}
+
+/* El footer solo existe en el lobby: en modo juego la pantalla es estática */
+.modo-juego .site-footer {
+    display: none;
+}
+
+.footer-inner {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.footer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 48px;
+    padding-bottom: 36px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.footer-brand { max-width: 340px; }
+
+.footer-logo { display: flex; align-items: center; gap: 12px; }
+
+.footer-logo-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.footer-logo-text {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+}
+
+.footer-desc {
+    margin: 14px 0 0;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+}
+
+.footer-cols {
+    display: flex;
+    gap: 56px;
+}
+
+.footer-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.footer-col h4 {
+    margin: 0 0 4px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.footer-link {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    text-decoration: none;
+    text-align: left;
+    cursor: pointer;
+    transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.footer-link:hover {
+    color: var(--accent-primary);
+    transform: translateX(2px);
+}
+
+.footer-link:focus-visible,
+.footer-license a:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.footer-bottom {
+    padding-top: 24px;
+    text-align: center;
+}
+
+.footer-made {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+}
+
+.footer-heart {
+    display: inline-block;
+    animation: footer-heartbeat 1.6s ease-in-out infinite;
+}
+
+@keyframes footer-heartbeat {
+    0%, 60%, 100% { transform: scale(1); }
+    20% { transform: scale(1.25); }
+    40% { transform: scale(1.05); }
+}
+
+.footer-license {
+    margin: 8px 0 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.footer-license a {
+    color: var(--text-secondary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.footer-license a:hover { color: var(--accent-primary); }
+
+@media (prefers-reduced-motion: reduce) {
+    .footer-heart { animation: none; }
+}
+
+@media (max-width: 760px) {
+    .site-footer { padding: 40px 20px 28px; }
+    .footer-top { flex-direction: column; gap: 32px; }
+    .footer-brand { max-width: none; }
+    .footer-cols { gap: 28px; flex-wrap: wrap; width: 100%; }
+    .footer-col { min-width: 120px; flex: 1; }
+}
+
+/* ===== Encabezado en móvil: logo arriba, botones debajo (evita el desborde horizontal) ===== */
+@media (max-width: 640px) {
+    .header-top {
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .header-actions {
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+.footer-nowrap { white-space: nowrap; }

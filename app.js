@@ -234,6 +234,24 @@
             });
         }
 
+        // Pie de página: accesos rápidos a las secciones del producto
+        document.querySelectorAll('[data-footer-action]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const accion = btn.dataset.footerAction;
+                if (accion === 'modos') {
+                    setupSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else if (accion === 'aprendizaje' && btnTutorStart) {
+                    btnTutorStart.click();
+                } else if (accion === 'logros') {
+                    const b = document.getElementById('achievements-toggle');
+                    if (b) b.click();
+                } else if (accion === 'estadisticas') {
+                    const b = document.getElementById('stats-toggle');
+                    if (b) b.click();
+                }
+            });
+        });
+
         // La página siempre arranca en el lobby: se limpia cualquier estado/ruta de juego (p. ej. tras recargar en #lobby/vidas)
         try {
             history.replaceState(null, '', location.pathname + location.search + '#lobby');
