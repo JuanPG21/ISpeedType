@@ -837,6 +837,30 @@ body {
     border-radius: 100px;
 }
 
+/* Ventana deslizante del texto (ver renderTextDisplay en app.js)
+   - .chunk no genera caja propia: las palabras fluyen y saltan de línea igual
+     que si no existiera el contenedor.
+   - overflow-anchor: none -> el scroll lo compensa app.js al montar/desmontar
+     chunks; así el navegador no hace un ajuste propio encima.
+   - En textos largos solo hay una parte del texto en el DOM, así que la barra de
+     scroll no representaría el texto completo: se oculta (el progreso ya se ve
+     en la barra de progreso). */
+.text-display {
+    overflow-anchor: none;
+}
+
+.text-display .chunk {
+    display: contents;
+}
+
+.text-display.windowed {
+    scrollbar-width: none;
+}
+
+.text-display.windowed::-webkit-scrollbar {
+    display: none;
+}
+
 /* Word wrapper - prevents words from breaking across lines */
 .word {
     display: inline-block;
@@ -900,6 +924,38 @@ body {
 
     50% {
         opacity: 0;
+    }
+}
+
+/* Cursor del texto PRINCIPAL (no afecta al tutor, que usa las reglas de arriba).
+   RENDIMIENTO: antes el cursor usaba `position: relative` + un `::before`. Cada
+   vez que el cursor avanzaba, ese cambio de posición obligaba al navegador a
+   recalcular el layout de TODO el texto (~15 ms con 20 000 letras, por tecla).
+   Ahora la barra parpadeante se dibuja con el fondo de la letra, que solo pinta
+   y nunca altera el layout. Se ve igual (barra de 2px que parpadea). */
+#text-display .char.char-current {
+    position: static;
+    background-image: linear-gradient(var(--color-current), var(--color-current));
+    background-repeat: no-repeat;
+    background-position: 0 50%;
+    background-size: 2px calc(100% - 4px);
+    animation: blink-cursor-bar 1s step-end infinite;
+}
+
+#text-display .char.char-current::before {
+    content: none;
+    animation: none;
+}
+
+@keyframes blink-cursor-bar {
+
+    0%,
+    100% {
+        background-size: 2px calc(100% - 4px);
+    }
+
+    50% {
+        background-size: 0 0;
     }
 }
 
@@ -1629,20 +1685,18 @@ body.fade-active .typing-input:focus {
     opacity: 0.8;
 }
 
-/* Letras en Racha Activa (Verde suave y armónico) */
-.char.char-on-fire {
+/* Letras en Racha Activa (Verde suave y armónico)
+   RENDIMIENTO: la racha la marca UNA sola clase (`on-fire`) en el contenedor del
+   texto; no se agrega una clase ni una animación a cada letra. Antes cada letra
+   correcta tenía su propia animación infinita de text-shadow, y con textos largos
+   eran miles de animaciones repintándose a la vez (lag).
+   TAMPOCO se usa `text-shadow` por letra: cada vez que una letra pasaba a
+   "correcta" con ese brillo, Chromium recalculaba el layout de TODO el texto
+   (~12 ms por tecla con 20 000 letras). Solo el color es gratis.
+   `:where()` mantiene la misma especificidad que antes, así que
+   `.char-scrambled` (más abajo) sigue ganando en las letras de la tormenta. */
+:where(.text-display.on-fire) .char.char-correct {
     color: #4ade80 !important;
-    text-shadow: 0 0 4px rgba(34, 197, 94, 0.5), 0 0 8px rgba(74, 222, 128, 0.25) !important;
-    animation: streak-glow 0.8s infinite alternate ease-in-out;
-}
-
-@keyframes streak-glow {
-    0% {
-        text-shadow: 0 0 3px rgba(34, 197, 94, 0.4), 0 0 6px rgba(74, 222, 128, 0.2);
-    }
-    100% {
-        text-shadow: 0 0 6px rgba(34, 197, 94, 0.6), 0 0 12px rgba(74, 222, 128, 0.35);
-    }
 }
 
 .typing-card.on-fire {

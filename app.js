@@ -136,6 +136,20 @@
     let characters = [];       // Array of expected characters
     let charSpans = [];        // Cached span references
     let typedChars = [];       // Array of characters the user has typed
+
+    // ===== Render incremental del texto (rendimiento con textos largos) =====
+    // Antes, cada tecla repintaba TODAS las letras del texto (O(n)). Ahora se
+    // recuerda el estado ya pintado de cada letra y solo se tocan las que cambian.
+    const ST_PENDING = 0, ST_CORRECT = 1, ST_ERROR = 2, ST_CURRENT = 3;
+    const STATE_CLASSES = ['char-pending', 'char-correct', 'char-error', 'char-current'];
+    let charState = new Uint8Array(0); // Estado pintado de cada letra (ST_*)
+    let renderedLen = 0;               // typedChars.length en el último pintado
+    let dirtyFrom = Infinity;          // Índice más bajo de typedChars modificado desde el último pintado
+    let errorCount = 0;                // Letras con error pintadas actualmente
+    let consecCorrect = 0;             // Letras correctas seguidas desde el inicio (hasta el primer error)
+    // Últimos valores escritos en la barra de stats (evita reescribir el DOM sin cambios)
+    const lastStats = { wpm: null, accuracy: null, errors: null, progress: null, time: null };
+
     let totalKeystrokes = 0;   // Total characters typed (not backspaces)
     let correctKeystrokes = 0; // Correct characters typed
     let totalErrors = 0;       // Total incorrect keystrokes
@@ -765,6 +779,7 @@
         originalText = textInput.value.trimEnd();
         characters = originalText.split('');
         typedChars = [];
+        consecCorrect = 0;
         totalKeystrokes = 0;
         correctKeystrokes = 0;
         totalErrors = 0;
@@ -923,43 +938,183 @@
         }
     }
 
-    // ===== Render Text Display =====
+    // ===== Render Text Display (con ventana deslizante) =====
+    // RENDIMIENTO con textos larguísimos: antes se creaba UN <span> por letra de
+    // todo el texto (200 000 letras = 430 000 nodos, ~1 GB de memoria). Cada cambio
+    // (p. ej. activar/quitar la racha verde) obligaba al navegador a recalcular
+    // estilos y layout de TODOS esos nodos => lagazos.
+    // Ahora el texto se divide en "chunks" de ~400 letras y solo se mantienen en el
+    // DOM los que rodean al cursor (unos pocos miles de letras). Lo demás vive solo
+    // en los arreglos `characters` / `charState` / `typedChars`, que son baratos.
+    // Textos cortos (<= ~4 000 letras) se montan completos, igual que antes.
+    const CHUNK_CHARS = 400;   // tamaño aproximado de cada chunk (corta en un espacio)
+    const WIN_BEHIND = 2;      // chunks que se conservan detrás del cursor
+    const WIN_AHEAD = 4;       // chunks que se montan por delante del cursor
+    const WIN_SLACK = 2;       // histéresis: no se desmonta hasta pasarse por esto
+    let chunkStarts = [0];     // índice de la primera letra de cada chunk (+ total al final)
+    let chunkEls = [];         // wrapper DOM de cada chunk montado (undefined si no)
+    let mStart = 0, mEnd = 0;  // chunks montados: [mStart, mEnd)
+    let isWindowed = false;
+
     function renderTextDisplay() {
         textDisplay.innerHTML = '';
-        charSpans = [];
+        charSpans = new Array(characters.length);
+        scrambledPositions.clear(); // la tormenta anterior no debe "pintar" este texto
 
+        // Reiniciar el estado del render incremental y la caché de stats
+        charState = new Uint8Array(characters.length);
+        if (characters.length > 0) charState[0] = ST_CURRENT;
+        renderedLen = 0;
+        dirtyFrom = Infinity;
+        errorCount = 0;
+        lastStats.wpm = lastStats.accuracy = lastStats.errors = lastStats.progress = lastStats.time = null;
+
+        // Partir el texto en chunks que terminan justo después de un espacio
+        // (así ninguna palabra queda cortada entre dos chunks).
+        chunkStarts = [0];
+        let sinceCut = 0;
+        for (let i = 0; i < characters.length; i++) {
+            sinceCut++;
+            if (sinceCut >= CHUNK_CHARS && characters[i] === ' ' && i + 1 < characters.length) {
+                chunkStarts.push(i + 1);
+                sinceCut = 0;
+            }
+        }
+        chunkStarts.push(characters.length);
+
+        chunkEls = new Array(chunkStarts.length - 1);
+        mStart = mEnd = 0;
+        isWindowed = (chunkStarts.length - 1) > (WIN_BEHIND + WIN_AHEAD + 2 * WIN_SLACK + 1);
+        textDisplay.classList.toggle('windowed', isWindowed);
+        textDisplay.scrollTop = 0;
+
+        syncWindow(0);
+    }
+
+    // Construye el DOM de un chunk respetando el estado actual de cada letra
+    // (correcta / error / pendiente / cursor / desvanecida / tormenta).
+    function buildChunk(k) {
+        const start = chunkStarts[k];
+        const end = chunkStarts[k + 1];
+        const typedLen = typedChars.length;
+        const fadeActive = isFadeMode && isStarted;
+
+        const wrap = document.createElement('span');
+        wrap.className = 'chunk'; // display: contents (ver CSS): no altera el flujo del texto
         let currentWord = document.createElement('span');
         currentWord.className = 'word';
 
-        characters.forEach((char, i) => {
+        for (let i = start; i < end; i++) {
+            const char = characters[i];
+            const state = charState[i];
             const span = document.createElement('span');
-            span.className = 'char';
-            span.textContent = char;
 
-            if (i === 0) {
-                span.classList.add('char-current');
-            } else {
-                span.classList.add('char-pending');
+            let shown = char;
+            if (state === ST_ERROR && i < typedLen) {
+                const typed = typedChars[i];
+                shown = typed === ' ' ? '·' : typed;
             }
+            span.textContent = shown;
+
+            let cls = 'char ' + STATE_CLASSES[state];
+            if (char === ' ') cls += ' char-space';
+            if (scrambledPositions.has(i)) cls += ' char-scrambled';
+            if (fadeActive) {
+                if (i < fadeIndex) cls += ' char-faded';
+                else if (i === fadeIndex && fadeIndex > 0) cls += ' char-ghost-front';
+            }
+            span.className = cls;
 
             if (char === ' ') {
-                span.classList.add('char-space');
-                if (currentWord.children.length > 0) {
-                    textDisplay.appendChild(currentWord);
+                if (currentWord.firstChild) {
+                    wrap.appendChild(currentWord);
                     currentWord = document.createElement('span');
                     currentWord.className = 'word';
                 }
-                textDisplay.appendChild(span);
+                wrap.appendChild(span);
             } else {
                 currentWord.appendChild(span);
             }
 
-            charSpans.push(span);
-        });
-
-        if (currentWord.children.length > 0) {
-            textDisplay.appendChild(currentWord);
+            charSpans[i] = span;
         }
+
+        if (currentWord.firstChild) wrap.appendChild(currentWord);
+        chunkEls[k] = wrap;
+        return wrap;
+    }
+
+    function unmountChunk(k) {
+        const el = chunkEls[k];
+        if (el) {
+            el.remove();
+            chunkEls[k] = undefined;
+        }
+        const end = chunkStarts[k + 1];
+        for (let i = chunkStarts[k]; i < end; i++) charSpans[i] = undefined;
+    }
+
+    // Índice del chunk que contiene la letra `idx` (búsqueda binaria)
+    function chunkOf(idx) {
+        let lo = 0, hi = chunkStarts.length - 2;
+        while (lo < hi) {
+            const mid = (lo + hi + 1) >> 1;
+            if (chunkStarts[mid] <= idx) lo = mid; else hi = mid - 1;
+        }
+        return lo;
+    }
+
+    // Mantiene montados solo los chunks cercanos al cursor.
+    function syncWindow(cursor) {
+        const n = chunkStarts.length - 1;
+        if (n <= 0) return;
+
+        const c = chunkOf(Math.min(cursor, characters.length - 1));
+        const lo = isWindowed ? Math.max(0, c - WIN_BEHIND) : 0;
+        const hi = isWindowed ? Math.min(n - 1, c + WIN_AHEAD) : n - 1;
+
+        // ¿Cambia lo que hay arriba del cursor? Entonces el contenido se desplaza
+        // y hay que compensar el scroll para que el cursor no "salte".
+        const topChanges = mEnd > mStart && (mStart < lo - WIN_SLACK || mStart > lo);
+        const anchor = topChanges ? charSpans[cursor] : null;
+        const anchorTop = anchor ? anchor.getBoundingClientRect().top : 0;
+
+        // Desmontar lo que quedó lejos (con histéresis para no repetir montajes)
+        while (mEnd > mStart && mStart < lo - WIN_SLACK) unmountChunk(mStart++);
+        while (mEnd > mStart && mEnd - 1 > hi + WIN_SLACK) unmountChunk(--mEnd);
+        if (mEnd <= mStart) mStart = mEnd = lo;
+
+        // Montar lo que falta, antes y después
+        while (mStart > lo) {
+            mStart--;
+            textDisplay.insertBefore(buildChunk(mStart), textDisplay.firstChild);
+        }
+        if (mEnd <= hi) {
+            const frag = document.createDocumentFragment();
+            while (mEnd <= hi) frag.appendChild(buildChunk(mEnd++));
+            textDisplay.appendChild(frag);
+        }
+
+        if (anchor && charSpans[cursor] === anchor) {
+            textDisplay.scrollTop += anchor.getBoundingClientRect().top - anchorTop;
+        }
+    }
+
+    // ===== Registro de cambios en typedChars (para el render incremental) =====
+    // También mantiene `consecCorrect` (largo del prefijo correcto) al día en O(1),
+    // en vez de recorrer todo el texto escrito en cada tecla y cada 100 ms.
+    function pushTyped(ch) {
+        const idx = typedChars.length;
+        if (idx < dirtyFrom) dirtyFrom = idx;
+        if (consecCorrect === idx && ch === characters[idx]) consecCorrect++;
+        typedChars.push(ch);
+    }
+
+    function popTyped() {
+        typedChars.pop();
+        const len = typedChars.length;
+        if (len < dirtyFrom) dirtyFrom = len;
+        if (consecCorrect > len) consecCorrect = len;
     }
 
     // ===== Handle Input (character typed) =====
@@ -998,7 +1153,7 @@
                 if (isDeadKey) {
                     // In Dead Zone: only [Space] skips the broken key
                     if (char === ' ') {
-                        typedChars.push(expectedChar); // Mark as correctly resolved
+                        pushTyped(expectedChar); // Mark as correctly resolved
                         totalKeystrokes++;
                         correctKeystrokes++;
                         currentCombo++;
@@ -1018,7 +1173,7 @@
                         }
                     } else {
                         // Any other key (including pressing the broken key itself) is an ERROR!
-                        typedChars.push(char === expectedChar ? '•' : char);
+                        pushTyped(char === expectedChar ? '•' : char);
                         totalKeystrokes++;
                         totalErrors++;
                         currentCombo = 0;
@@ -1045,7 +1200,7 @@
                     }
                 } else {
                     // Normal key comparison
-                    typedChars.push(char);
+                    pushTyped(char);
                     totalKeystrokes++;
                     trackKey(expectedChar, char === expectedChar);
 
@@ -1104,7 +1259,7 @@
             const diff = prevWord.length - inputVal.length;
             for (let i = 0; i < diff; i++) {
                 if (typedChars.length > 0) {
-                    typedChars.pop();
+                    popTyped();
                 }
             }
         }
@@ -1142,7 +1297,7 @@
                     triggerGhostOver();
                     return;
                 }
-                typedChars.pop();
+                popTyped();
                 syncInputBox();
                 updateDisplay();
                 updateStats();
@@ -1157,65 +1312,77 @@
     }
 
     // ===== Update Display =====
+    // Render INCREMENTAL: solo se revisan las letras que pudieron cambiar desde el
+    // último pintado (la zona entre el cursor anterior y el nuevo). El costo por
+    // tecla ya no depende del largo del texto.
+    // La racha (verde) NO se aplica letra por letra: la maneja la clase `on-fire`
+    // del contenedor (ver activateFire/deactivateFire) y el CSS.
     function updateDisplay() {
-        let hasError = false;
+        const total = characters.length;
+        if (total === 0) return;
 
-        for (let i = 0; i < characters.length; i++) {
-            const span = charSpans[i];
+        const typedLen = typedChars.length;
+        const from = Math.min(renderedLen, typedLen, dirtyFrom);
+        const to = Math.min(Math.max(renderedLen, typedLen), total - 1);
+
+        for (let i = from; i <= to; i++) {
             const expectedChar = characters[i];
+            let state, shown;
 
-            // Remove all state classes
-            span.classList.remove('char-pending', 'char-correct', 'char-error', 'char-current', 'char-on-fire');
-
-            if (i < typedChars.length) {
-                if (typedChars[i] === expectedChar) {
-                    // Correct character
-                    span.classList.add('char-correct');
-                    if (isOnFire) {
-                        span.classList.add('char-on-fire');
-                    }
-                    span.textContent = expectedChar;
+            if (i < typedLen) {
+                const typed = typedChars[i];
+                if (typed === expectedChar) {
+                    state = ST_CORRECT;
+                    shown = expectedChar;
                 } else {
                     // Wrong character — show what the user actually typed
-                    hasError = true;
-                    span.classList.add('char-error');
-                    if (typedChars[i] === ' ') {
-                        span.textContent = '·'; // Visible space indicator for wrong space
-                    } else {
-                        span.textContent = typedChars[i];
-                    }
+                    state = ST_ERROR;
+                    shown = typed === ' ' ? '·' : typed; // '·' = espacio incorrecto visible
                 }
-            } else if (i === typedChars.length) {
-                // Cursor position
-                span.classList.add('char-current');
-                span.textContent = expectedChar;
+            } else if (i === typedLen) {
+                state = ST_CURRENT; // Cursor position
+                shown = expectedChar;
             } else {
-                // Not yet reached
-                span.classList.add('char-pending');
-                span.textContent = expectedChar;
+                state = ST_PENDING; // Not yet reached
+                shown = expectedChar;
+            }
+
+            // La letra puede no estar montada (fuera de la ventana, p. ej. al pegar
+            // mucho texto de golpe): el estado igual se registra y se pinta al montarla.
+            const span = charSpans[i];
+            const prevState = charState[i];
+            if (prevState !== state) {
+                if (span) {
+                    span.classList.remove(STATE_CLASSES[prevState]);
+                    span.classList.add(STATE_CLASSES[state]);
+                }
+                charState[i] = state;
+                if (state === ST_ERROR) errorCount++;
+                else if (prevState === ST_ERROR) errorCount--;
+            }
+
+            // Actualiza el texto en el mismo nodo, solo si cambió
+            if (span) {
+                const node = span.firstChild;
+                if (node && node.data !== shown) node.data = shown;
             }
         }
 
+        renderedLen = typedLen;
+        dirtyFrom = Infinity;
+
+        // Montar/desmontar chunks según dónde quedó el cursor
+        syncWindow(typedLen);
+
         // Input border glow changes when there are errors
-        if (hasError) {
-            typingInput.classList.add('has-error');
-        } else {
-            typingInput.classList.remove('has-error');
-        }
+        typingInput.classList.toggle('has-error', errorCount > 0);
     }
 
     // ===== Get Consecutive Correct Count =====
     // Counts correct characters from the beginning until the first error
+    // O(1): `consecCorrect` se mantiene en pushTyped/popTyped.
     function getConsecutiveCorrect() {
-        let count = 0;
-        for (let i = 0; i < typedChars.length; i++) {
-            if (typedChars[i] === characters[i]) {
-                count++;
-            } else {
-                break;
-            }
-        }
-        return count;
+        return consecCorrect;
     }
 
     // ===== Scroll to Current Character =====
@@ -1227,9 +1394,12 @@
         if (!currentEl) return;
 
         const container = textDisplay;
-        const elTop = currentEl.offsetTop;
-        const containerHeight = container.clientHeight;
+        // Posición de la letra DENTRO del contenido scrolleable. Antes se usaba
+        // `offsetTop`, pero el offsetParent es la tarjeta (no el contenedor del texto),
+        // así que salía desfasado ~30px y al borrar hacia arriba el cursor quedaba fuera de vista.
         const scrollTop = container.scrollTop;
+        const elTop = currentEl.getBoundingClientRect().top - container.getBoundingClientRect().top + scrollTop;
+        const containerHeight = container.clientHeight;
 
         if (elTop > scrollTop + containerHeight - 60) {
             container.scrollTo({
@@ -1267,21 +1437,33 @@
             ? Math.round((consecutiveCorrect / characters.length) * 100)
             : 0;
 
-        // Update DOM
-        wpmDisplay.textContent = wpm;
-        accuracyDisplay.innerHTML = accuracy + '<small>%</small>';
-        errorsDisplay.textContent = totalErrors;
+        // Update DOM (solo lo que cambió: esto corre cada tecla y cada 100 ms)
+        if (wpm !== lastStats.wpm) {
+            lastStats.wpm = wpm;
+            wpmDisplay.textContent = wpm;
+        }
+        if (accuracy !== lastStats.accuracy) {
+            lastStats.accuracy = accuracy;
+            accuracyDisplay.innerHTML = accuracy + '<small>%</small>';
+        }
+        if (totalErrors !== lastStats.errors) {
+            lastStats.errors = totalErrors;
+            errorsDisplay.textContent = totalErrors;
+        }
 
-        progressBar.style.width = progress + '%';
-        progressText.textContent = progress + '%';
+        if (progress !== lastStats.progress) {
+            lastStats.progress = progress;
+            progressBar.style.width = progress + '%';
+            progressText.textContent = progress + '%';
 
-        // Color progress based on completion
-        if (progress >= 100) {
-            progressText.style.color = 'var(--accent-secondary)';
-        } else if (progress >= 75) {
-            progressText.style.color = 'var(--accent-primary)';
-        } else {
-            progressText.style.color = '';
+            // Color progress based on completion
+            if (progress >= 100) {
+                progressText.style.color = 'var(--accent-secondary)';
+            } else if (progress >= 75) {
+                progressText.style.color = 'var(--accent-primary)';
+            } else {
+                progressText.style.color = '';
+            }
         }
     }
 
@@ -1290,7 +1472,11 @@
         const elapsed = getElapsedSeconds();
         const mins = Math.floor(elapsed / 60);
         const secs = Math.floor(elapsed % 60);
-        timeDisplay.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+        if (timeStr !== lastStats.time) {
+            lastStats.time = timeStr;
+            timeDisplay.textContent = timeStr;
+        }
 
         // Also update WPM in real-time
         updateStats();
