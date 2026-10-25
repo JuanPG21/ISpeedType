@@ -14,6 +14,7 @@
     "ui.theme-green": "Verde",
     "ui.immersive-title": "Temas inmersivos",
     "ui.immersive-graffiti": "Grafiti callejero",
+    "ui.immersive-manga": "Batalla manga",
     "ui.immersive-sound": "Sonido del tema",
     "ui.immersive-sound-on": "Sí",
     "ui.immersive-sound-off": "No",

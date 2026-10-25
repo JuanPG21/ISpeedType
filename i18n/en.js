@@ -14,6 +14,7 @@
     "ui.theme-green": "Green",
     "ui.immersive-title": "Immersive themes",
     "ui.immersive-graffiti": "Street graffiti",
+    "ui.immersive-manga": "Manga battle",
     "ui.immersive-sound": "Theme sound",
     "ui.immersive-sound-on": "On",
     "ui.immersive-sound-off": "Off",
