@@ -206,6 +206,8 @@
     } catch (err) {
         console.warn('Error reading speedtype-user-stats:', err);
     }
+    // Limpieza: una racha de miles de palabras solo pudo salir de un pegado (ya bloqueado)
+    if (!(userStats.maxWordStreak <= 3000)) userStats.maxWordStreak = 0;
 
     // ===== Estadísticas por tecla de la partida en curso: { letra: [pulsaciones, fallos] } =====
     let sessionKeys = {};
@@ -343,6 +345,17 @@
         btnRandLong.addEventListener('click', () => setRandomText('long'));
 
         // --- Typing events ---
+        // Anti-pegado: no se puede pegar, soltar ni cortar texto en la prueba
+        ['paste', 'drop', 'cut'].forEach(ev => typingInput.addEventListener(ev, (e) => {
+            e.preventDefault();
+            notifyPasteBlocked();
+        }));
+        typingInput.addEventListener('beforeinput', (e) => {
+            if (e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop' || e.inputType === 'insertFromYank') {
+                e.preventDefault();
+                notifyPasteBlocked();
+            }
+        });
         typingInput.addEventListener('input', handleInput);
         typingInput.addEventListener('keydown', handleKeydown);
 
@@ -1134,6 +1147,17 @@
     }
 
     // ===== Handle Input (character typed) =====
+    // Aviso breve (en el placeholder) cuando se intenta pegar texto
+    let pasteNoticeTimer = null;
+    function notifyPasteBlocked() {
+        typingInput.classList.remove('shake-error');
+        void typingInput.offsetWidth;
+        typingInput.classList.add('shake-error');
+        typingInput.placeholder = tr('paste.blocked');
+        clearTimeout(pasteNoticeTimer);
+        pasteNoticeTimer = setTimeout(() => { typingInput.classList.remove('shake-error'); syncInputBox(); }, 1800);
+    }
+
     function handleInput(e) {
         if (isTutorMode || isFinished || isCountingDown || isGameOver) return;
 
@@ -1156,6 +1180,14 @@
 
         const prevWord = getCurrentWordTyped();
         const inputVal = typingInput.value;
+
+        // Red de seguridad: si de golpe entran varios caracteres (pegado por otra vía,
+        // arrastre, autocompletado raro) se descarta; el teclado real mete 1-2 como máximo.
+        if (inputVal.length - prevWord.length > 2) {
+            typingInput.value = prevWord;
+            notifyPasteBlocked();
+            return;
+        }
 
         if (inputVal.length > prevWord.length) {
             // New character(s) typed or pasted
@@ -2094,8 +2126,11 @@
         return '';
     }
 
+    const MAX_HUMAN_WPM = 300;   // por encima de esto se considera trampa/error y no cuenta
+
     function registrarPartida(result, wpm, accuracy, elapsed) {
         if (!window.SpeedStats || !isEligibleForAchievements) return;
+        if (wpm > MAX_HUMAN_WPM) return; // marca imposible: no se registra
         try {
             window.SpeedStats.record({
                 result,
@@ -2187,6 +2222,7 @@
         resultErrors.textContent = totalErrors;
 
         // Guardar la partida en el historial ANTES de evaluar logros (los de días seguidos lo usan)
+        if (wpm > MAX_HUMAN_WPM) isEligibleForAchievements = false; // marca imposible: ni historial ni logros
         registrarPartida('ok', wpm, accuracy, elapsed);
 
         // Evaluar logros de fin de prueba

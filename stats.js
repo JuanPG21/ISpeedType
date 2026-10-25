@@ -56,6 +56,8 @@
 
     let history = load(HISTORY_KEY, []);
     if (!Array.isArray(history)) history = [];
+    // Limpieza: se descartan marcas imposibles (> 300 WPM) que venían de pegar texto
+    history = history.filter(h => h && num(h.wpm) <= 300);
     let keyStats = load(KEYS_KEY, {});
     if (!keyStats || typeof keyStats !== 'object' || Array.isArray(keyStats)) keyStats = {};
     let days = load(DAYS_KEY, []);

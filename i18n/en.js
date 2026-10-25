@@ -383,5 +383,6 @@
     "ach.dias-30.t": "Unstoppable Month",
     "ach.dias-30.d": "Play 30 days in a row.",
     "ach.tutor-master.t": "Keyboard Graduate",
-    "ach.tutor-master.d": "Successfully complete all 6 levels of Learning Mode."
+    "ach.tutor-master.d": "Successfully complete all 6 levels of Learning Mode.",
+    "paste.blocked": "Pasting is disabled: type the text yourself! ⌨️"
 };

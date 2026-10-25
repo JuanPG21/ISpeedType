@@ -277,5 +277,6 @@
     "st.reset": "Borrar historial de partidas",
     "st.intro": "Aún no hay partidas en el historial. Cada prueba que juegues desde ahora se registrará aquí con sus gráficas y récords.",
     "st.confirmReset": "¿Borrar todo el historial de partidas y las estadísticas de teclas?\n\nTus logros NO se borran.",
-    "st.weekdays": "Lun,Mar,Mié,Jue,Vie,Sáb,Dom"
+    "st.weekdays": "Lun,Mar,Mié,Jue,Vie,Sáb,Dom",
+    "paste.blocked": "No se puede pegar: ¡escribe el texto tú mismo! ⌨️"
 };
