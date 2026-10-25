@@ -1301,6 +1301,7 @@
                     }
                 }
                 updateComboUI();
+                fxKey();
             }
         } else if (inputVal.length < prevWord.length) {
             // Deletion via mobile/IME input event
@@ -1619,6 +1620,27 @@
     function updateComboUI() {
         if (!comboCountDisplay) return;
         comboCountDisplay.textContent = currentCombo;
+        const T = window.ImmersiveThemes;
+        if (T && T.active) T.emit('combo', currentCombo, isOnFire);
+    }
+
+    // ===== Temas inmersivos (themes/immersive.js) =====
+    // Avisa al tema activo de la última tecla procesada. Si no hay tema activo, no hace nada.
+    function fxKey() {
+        const T = window.ImmersiveThemes;
+        if (!T || !T.active) return;
+        const idx = typedChars.length - 1;
+        if (idx < 0) return;
+        T.emit('key', {
+            ok: typedChars[idx] === characters[idx],
+            el: charSpans[idx],
+            char: characters[idx]
+        });
+    }
+
+    function fxEnd(kind) {
+        const T = window.ImmersiveThemes;
+        if (T && T.active) T.emit('end', kind);
     }
 
     function activateFire() {
@@ -2160,6 +2182,8 @@
         isFinished = true;
         clearInterval(timerInterval);
 
+        fxEnd('gameover');
+
         // Block input immediately
         typingInput.disabled = true;
         typingInput.value = tr('res.faded');
@@ -2193,6 +2217,7 @@
         deactivateFire();
         isFinished = true;
         clearInterval(timerInterval);
+        fxEnd('finish');
 
         // Si la última palabra no tuvo errores, contarla en la racha
         if (!currentWordHadError) {
@@ -2249,6 +2274,8 @@
         isGameOver = true;
         isFinished = true;
         clearInterval(timerInterval);
+
+        fxEnd('gameover');
 
         // Block input immediately
         typingInput.disabled = true;

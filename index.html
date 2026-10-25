@@ -50,6 +50,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="themes/immersive.css">
+    <link rel="stylesheet" href="themes/graffiti.css">
 </head>
 <body>
     <div id="lang-announcer" class="sr-only" role="status" aria-live="polite"></div>
@@ -131,6 +133,22 @@
                                 <button class="theme-option" data-theme="green">
                                     <span class="theme-swatch" style="background: linear-gradient(135deg, #111e16, #7cc8a0)"></span>
                                     <span data-i18n="ui.theme-green">Verde</span>
+                                </button>
+                            </div>
+
+                            <!-- Temas inmersivos: ocultos hasta desbloquearlos (10 clics en el logo). Ver themes/immersive.js -->
+                            <div class="immersive-section hidden" id="immersive-section">
+                                <span data-i18n="ui.immersive-title" class="theme-dropdown-title">Temas inmersivos</span>
+                                <div class="theme-options">
+                                    <button type="button" class="immersive-option hidden" data-immersive="graffiti" aria-pressed="false">
+                                        <span class="theme-swatch swatch-graffiti"></span>
+                                        <span data-i18n="ui.immersive-graffiti">Grafiti callejero</span>
+                                    </button>
+                                </div>
+                                <button type="button" class="immersive-sound" id="immersive-sound" aria-pressed="true">
+                                    <span class="immersive-sound-icon" aria-hidden="true">🔊</span>
+                                    <span data-i18n="ui.immersive-sound">Sonido del tema</span>
+                                    <span class="immersive-sound-state" data-i18n="ui.immersive-sound-on">Sí</span>
                                 </button>
                             </div>
                         </div>
@@ -827,6 +845,8 @@
     <script src="texts.js"></script>
     <script src="texts-en.js"></script>
     <script src="stats.js"></script>
+    <script src="themes/immersive.js"></script>
+    <script src="themes/graffiti.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

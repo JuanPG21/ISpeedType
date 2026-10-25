@@ -1,0 +1,552 @@
+/* ===================================================
+   ISpeedType — Tema inmersivo: GRAFITI CALLEJERO (Urban Vapor)
+   Todo va dentro de body.theme-graffiti: sin la clase, esto no afecta a nada.
+
+   Reglas de rendimiento que respeta este archivo (ver notas en styles.css):
+     - nada de text-shadow ni animaciones por letra en el texto principal;
+     - las letras solo cambian de color / fondo (se pintan, no recalculan layout);
+     - los efectos de chorreo y spray son elementos reutilizables (themes/graffiti.js).
+   =================================================== */
+
+/* Permite animar el relleno de la lata de combo */
+@property --gf-fill {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+}
+
+body.theme-graffiti {
+    /* Paleta propia del tema */
+    --gf-cyan: #00f0ff;
+    --gf-pink: #ff2fa3;
+    --gf-green: #39ff14;
+    --gf-yellow: #ffe600;
+    --gf-paper: #f4f1e8;
+    --gf-ink: #0b0908;
+
+    /* Variables globales de la app, redefinidas */
+    --bg-primary: #17110f;
+    --bg-secondary: #1f1715;
+    --bg-card: rgba(15, 11, 10, 0.88);
+    --bg-card-hover: rgba(28, 20, 18, 0.94);
+    --bg-input: rgba(8, 6, 6, 0.96);
+
+    --text-primary: #f4f1e8;
+    --text-secondary: #d2cbbb;
+    --text-muted: #a0978a;
+
+    --accent-primary: #ff2fa3;
+    --accent-primary-hover: #ff5cb9;
+    --accent-glow: rgba(255, 47, 163, 0.35);
+    --accent-secondary: #00f0ff;
+    --accent-secondary-glow: rgba(0, 240, 255, 0.25);
+
+    --color-correct: #00f0ff;
+    --color-correct-bg: transparent;
+    --color-error: #ff3b30;
+    --color-error-bg: rgba(0, 0, 0, 0.85);
+    --color-error-glow: rgba(255, 59, 48, 0.45);
+    --color-current: #ffe600;
+    --color-current-bg: rgba(255, 230, 0, 0.16);
+    --color-pending: #8f867a;
+
+    --border-color: rgba(244, 241, 232, 0.3);
+    --border-color-hover: rgba(244, 241, 232, 0.7);
+
+    --glow-1: transparent;
+    --glow-2: transparent;
+    --glow-3: transparent;
+
+    --font-sans: 'Permanent Marker', 'Marker Felt', 'Comic Sans MS', 'Chalkboard SE', cursive;
+    --font-mono: 'Permanent Marker', 'Marker Felt', 'Comic Sans MS', 'Chalkboard SE', cursive;
+
+    /* Esquinas irregulares, como recortadas a mano */
+    --radius-sm: 4px 9px 5px 10px;
+    --radius-md: 8px 14px 9px 15px;
+    --radius-lg: 10px 18px 12px 20px;
+    --radius-xl: 14px 24px 16px 26px;
+
+    /* Pared de ladrillo + overspray de neón + viñeta para que el texto se lea */
+    background-color: #17110f;
+    background-image:
+        radial-gradient(circle at 10% 14%, rgba(255, 47, 163, 0.2), transparent 26%),
+        radial-gradient(circle at 92% 86%, rgba(0, 240, 255, 0.16), transparent 28%),
+        radial-gradient(ellipse at 50% 25%, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.8) 100%),
+        url('graffiti-bricks.svg');
+    background-size: auto, auto, auto, 200px 100px;
+    transition: none;
+}
+
+/* Sin brillos de fondo (animaciones con desenfoque caro) ni vidrio esmerilado */
+body.theme-graffiti .bg-glow {
+    display: none;
+}
+
+body.theme-graffiti .glass-card,
+body.theme-graffiti .glass-card-mini,
+body.theme-graffiti .theme-dropdown,
+body.theme-graffiti .theme-toggle-btn,
+body.theme-graffiti .achievement-toast {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* ---------- Encabezado ---------- */
+body.theme-graffiti .logo-text {
+    letter-spacing: 0.03em;
+    color: var(--gf-paper);
+}
+
+body.theme-graffiti .logo-accent {
+    color: var(--gf-pink);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+}
+
+body.theme-graffiti .logo-icon {
+    color: var(--gf-cyan);
+}
+
+body.theme-graffiti .tagline {
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+}
+
+body.theme-graffiti .theme-toggle-btn,
+body.theme-graffiti .achievements-toggle-btn,
+body.theme-graffiti .lang-switch {
+    border-width: 2px;
+    border-color: var(--gf-paper);
+    box-shadow: 3px 3px 0 var(--gf-ink);
+}
+
+/* ---------- Tarjetas: paneles pegados en la pared ---------- */
+body.theme-graffiti .glass-card {
+    border: 3px solid var(--gf-paper);
+    box-shadow: 6px 6px 0 var(--gf-pink);
+}
+
+body.theme-graffiti .glass-card:hover {
+    border-color: var(--gf-paper);
+}
+
+body.theme-graffiti .typing-card {
+    box-shadow: 6px 6px 0 var(--gf-cyan);
+}
+
+body.theme-graffiti .results-card {
+    box-shadow: 6px 6px 0 var(--gf-green);
+}
+
+body.theme-graffiti .glass-card-mini {
+    border: 3px solid var(--gf-paper);
+    box-shadow: 4px 4px 0 var(--gf-ink);
+}
+
+/* Estadísticas: cada una con su color y una leve inclinación */
+body.theme-graffiti .stat-card:nth-child(odd) {
+    rotate: -1deg;
+}
+
+body.theme-graffiti .stat-card:nth-child(even) {
+    rotate: 0.8deg;
+}
+
+body.theme-graffiti .stat-card:nth-child(1) {
+    border-color: var(--gf-cyan);
+}
+
+body.theme-graffiti .stat-card:nth-child(2) {
+    border-color: var(--gf-green);
+}
+
+body.theme-graffiti .stat-card:nth-child(3) {
+    border-color: var(--gf-yellow);
+}
+
+body.theme-graffiti .stat-card:nth-child(4) {
+    border-color: var(--gf-pink);
+}
+
+body.theme-graffiti #wpm-display {
+    color: var(--gf-cyan);
+}
+
+body.theme-graffiti #accuracy-display {
+    color: var(--gf-green);
+}
+
+body.theme-graffiti #time-display {
+    color: var(--gf-yellow);
+}
+
+body.theme-graffiti .stat-label {
+    letter-spacing: 0.06em;
+}
+
+body.theme-graffiti .card-icon,
+body.theme-graffiti .results-badge {
+    background: linear-gradient(135deg, var(--gf-pink), var(--gf-cyan));
+    border: 3px solid var(--gf-paper);
+    color: var(--gf-ink);
+}
+
+/* ---------- Botones: stickers pegados asimétricamente ---------- */
+body.theme-graffiti .btn,
+body.theme-graffiti .btn-practice-start,
+body.theme-graffiti .btn-tutor-start {
+    border: 3px solid var(--gf-paper);
+    border-radius: 6px 14px 8px 15px / 14px 7px 15px 8px;
+    box-shadow: 3px 3px 0 var(--gf-ink);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+body.theme-graffiti .btn:nth-of-type(odd),
+body.theme-graffiti .btn-practice-start {
+    rotate: -1.6deg;
+}
+
+body.theme-graffiti .btn:nth-of-type(even),
+body.theme-graffiti .btn-tutor-start {
+    rotate: 1.3deg;
+}
+
+body.theme-graffiti .btn-sm {
+    rotate: -0.8deg;
+}
+
+body.theme-graffiti .btn-sm:nth-of-type(3n) {
+    rotate: 1.2deg;
+}
+
+body.theme-graffiti .btn-primary {
+    background: var(--gf-pink);
+    color: var(--gf-ink);
+}
+
+body.theme-graffiti .btn-primary:hover {
+    background: var(--accent-primary-hover);
+    box-shadow: 5px 5px 0 var(--gf-ink);
+}
+
+body.theme-graffiti .btn-secondary {
+    background: var(--gf-cyan);
+    color: var(--gf-ink);
+}
+
+body.theme-graffiti .btn-secondary:hover {
+    background: #5cf6ff;
+    border-color: var(--gf-paper);
+    box-shadow: 5px 5px 0 var(--gf-ink);
+}
+
+body.theme-graffiti .btn-ghost {
+    background: rgba(244, 241, 232, 0.08);
+    color: var(--gf-paper);
+}
+
+body.theme-graffiti .btn-ghost:hover {
+    background: rgba(244, 241, 232, 0.18);
+}
+
+body.theme-graffiti .btn-practice-start {
+    background: var(--gf-yellow);
+    color: var(--gf-ink);
+}
+
+body.theme-graffiti .btn-practice-start:hover {
+    background: #fff04d;
+    box-shadow: 5px 5px 0 var(--gf-ink);
+}
+
+body.theme-graffiti .btn-tutor-start {
+    background: var(--gf-green);
+    color: var(--gf-ink);
+}
+
+body.theme-graffiti .btn-tutor-start:hover {
+    background: #6bff4d;
+    box-shadow: 5px 5px 0 var(--gf-ink);
+}
+
+/* Esquina despegada del sticker */
+body.theme-graffiti .btn-primary::before,
+body.theme-graffiti .btn-secondary::before,
+body.theme-graffiti .btn-practice-start::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(225deg, rgba(23, 17, 15, 0.9) 50%, rgba(0, 0, 0, 0.35) 50%);
+    pointer-events: none;
+}
+
+body.theme-graffiti .btn-practice-start {
+    position: relative;
+    overflow: hidden;
+}
+
+body.theme-graffiti .btn-diff {
+    border: 2px solid var(--border-color);
+    box-shadow: 2px 2px 0 var(--gf-ink);
+}
+
+body.theme-graffiti .btn-diff:hover {
+    border-color: var(--gf-yellow);
+    background: rgba(255, 230, 0, 0.08);
+}
+
+body.theme-graffiti .btn-diff.active {
+    border-color: var(--gf-yellow);
+    background: rgba(255, 230, 0, 0.16);
+    box-shadow: 3px 3px 0 var(--gf-ink);
+}
+
+body.theme-graffiti .btn-diff.diff-hardcore.active {
+    border-color: var(--color-error);
+    background: rgba(255, 59, 48, 0.16);
+    box-shadow: 3px 3px 0 var(--gf-ink);
+}
+
+/* ---------- Campos de texto ---------- */
+body.theme-graffiti .text-input,
+body.theme-graffiti .typing-input {
+    border: 3px solid var(--gf-paper);
+    box-shadow: 4px 4px 0 var(--gf-ink);
+}
+
+body.theme-graffiti .text-input:focus,
+body.theme-graffiti .typing-input:focus {
+    border-color: var(--gf-cyan);
+    box-shadow: 4px 4px 0 var(--gf-cyan);
+}
+
+body.theme-graffiti .typing-input.has-error {
+    border-color: var(--color-error);
+    box-shadow: 4px 4px 0 var(--color-error);
+    animation: none;
+}
+
+/* ---------- Texto a escribir ---------- */
+body.theme-graffiti #text-display {
+    font-size: 1.3rem;
+    letter-spacing: 0.05em;
+    scrollbar-color: var(--gf-pink) transparent;
+}
+
+body.theme-graffiti #text-display::-webkit-scrollbar-thumb {
+    background: var(--gf-pink);
+}
+
+/* Sin transición de color: la letra se "pinta" al instante */
+body.theme-graffiti #text-display .char {
+    transition: none;
+}
+
+/* Letra pintada: color de spray (ciclo cian / rosa / verde) + halo de overspray.
+   Solo color y fondo: se pinta, no recalcula el layout. */
+body.theme-graffiti #text-display .word .char-correct:nth-child(3n + 1) {
+    --gf-c: var(--gf-cyan);
+}
+
+body.theme-graffiti #text-display .word .char-correct:nth-child(3n + 2) {
+    --gf-c: var(--gf-pink);
+}
+
+body.theme-graffiti #text-display .word .char-correct:nth-child(3n) {
+    --gf-c: var(--gf-green);
+}
+
+body.theme-graffiti #text-display .char.char-correct {
+    --gf-c: var(--gf-cyan);
+    color: var(--gf-c);
+    background-image: radial-gradient(closest-side, color-mix(in srgb, var(--gf-c) 30%, transparent), transparent 90%);
+    background-repeat: no-repeat;
+    background-position: 50% 55%;
+    background-size: 150% 100%;
+}
+
+/* Con la racha activa la app fuerza verde; aquí mantiene los colores del spray */
+body.theme-graffiti #text-display.on-fire .char.char-correct {
+    color: var(--gf-c) !important;
+}
+
+/* Letra por escribir: color de pared, sin chispa */
+body.theme-graffiti #text-display .char.char-pending {
+    color: var(--color-pending);
+}
+
+/* Error: tachón negro de pintura sobre la letra */
+body.theme-graffiti #text-display .char.char-error {
+    color: var(--gf-paper);
+    background-color: #000;
+    background-image: repeating-linear-gradient(115deg, #000 0 3px, #2a2a2a 3px 5px);
+    border-radius: 42% 58% 50% 50% / 50% 40% 60% 50%;
+    padding: 0 2px;
+    text-decoration: line-through;
+    text-decoration-color: var(--color-error);
+    text-decoration-thickness: 3px;
+}
+
+/* Letra actual: el cursor (barra amarilla) ya lo dibuja la app con --color-current */
+
+/* ---------- Medidor de combo: lata de aerosol ---------- */
+body.theme-graffiti #combo-stat-card {
+    position: relative;
+    padding-left: 66px;
+    border-color: var(--gf-pink);
+    transition: --gf-fill 0.25s ease-out;
+}
+
+/* Cuerpo de la lata: se llena de pintura con la racha */
+body.theme-graffiti #combo-stat-card::before {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    width: 24px;
+    height: 44px;
+    margin-top: -20px;
+    border: 3px solid var(--gf-paper);
+    border-radius: 5px 5px 8px 8px;
+    background: linear-gradient(to top,
+            var(--gf-pink) calc(var(--gf-fill) * 100%),
+            rgba(244, 241, 232, 0.08) calc(var(--gf-fill) * 100%));
+}
+
+/* Tapa y boquilla */
+body.theme-graffiti #combo-stat-card::after {
+    content: '';
+    position: absolute;
+    left: 24px;
+    top: 50%;
+    width: 12px;
+    height: 7px;
+    margin-top: -29px;
+    background: var(--gf-paper);
+    border-radius: 3px 3px 0 0;
+    box-shadow: 4px -3px 0 -2px var(--gf-paper);
+}
+
+body.theme-graffiti #combo-stat-card.gf-full::before {
+    animation: gf-can-shake 0.35s ease-in-out infinite;
+}
+
+@keyframes gf-can-shake {
+
+    0%,
+    100% {
+        transform: rotate(0);
+    }
+
+    25% {
+        transform: rotate(-4deg);
+    }
+
+    75% {
+        transform: rotate(4deg);
+    }
+}
+
+body.theme-graffiti .combo-highlight {
+    color: var(--gf-pink);
+    text-shadow: none;
+}
+
+/* ---------- Racha activa (fuego): se reinterpreta en estilo spray ---------- */
+body.theme-graffiti .typing-card.on-fire {
+    border-color: var(--gf-yellow) !important;
+    box-shadow: 6px 6px 0 var(--gf-yellow) !important;
+}
+
+body.theme-graffiti .typing-input.on-fire-border {
+    border-color: var(--gf-yellow) !important;
+    box-shadow: 4px 4px 0 var(--gf-yellow) !important;
+}
+
+/* ---------- Barra de progreso: franja de pintura ---------- */
+body.theme-graffiti .progress-bar-container {
+    height: 12px;
+    border: 2px solid var(--gf-paper);
+    background: rgba(0, 0, 0, 0.5);
+}
+
+body.theme-graffiti .progress-bar-fill {
+    background: linear-gradient(90deg, var(--gf-cyan), var(--gf-pink), var(--gf-green));
+    box-shadow: none;
+}
+
+body.theme-graffiti .progress-bar-fill::after {
+    display: none;
+}
+
+body.theme-graffiti .progress-text {
+    color: var(--gf-cyan);
+}
+
+/* ---------- Menú de temas ---------- */
+body.theme-graffiti .theme-dropdown {
+    border: 3px solid var(--gf-paper);
+    box-shadow: 5px 5px 0 var(--gf-pink);
+}
+
+/* ---------- Efectos de spray (los crea themes/graffiti.js) ---------- */
+.gf-fx {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 40;
+}
+
+.gf-fx-item {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    pointer-events: none;
+    will-change: transform, opacity;
+}
+
+/* Bruma de spray al pintar la letra */
+.gf-fx-item.gf-mist {
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle, var(--c), transparent 68%);
+    border-radius: 50%;
+}
+
+/* Chorreo: hilo de pintura con gota al final */
+.gf-fx-item.gf-drip {
+    width: 8px;
+    height: 30px;
+    transform-origin: 50% 0;
+    background:
+        radial-gradient(circle at 50% calc(100% - 4px), var(--c) 0 3.5px, transparent 4.5px),
+        linear-gradient(var(--c), var(--c)) 50% 0 / 3px calc(100% - 6px) no-repeat;
+}
+
+/* Mancha negra al fallar */
+.gf-fx-item.gf-splat {
+    width: 34px;
+    height: 30px;
+    background: #050505;
+    border-radius: 42% 58% 55% 45% / 50% 40% 60% 50%;
+}
+
+/* ---------- Accesibilidad: sin movimiento extra ---------- */
+@media (prefers-reduced-motion: reduce) {
+    body.theme-graffiti #combo-stat-card.gf-full::before {
+        animation: none;
+    }
+
+    body.theme-graffiti #combo-stat-card {
+        transition: none;
+    }
+}
