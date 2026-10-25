@@ -1,0 +1,712 @@
+/* ===================================================
+   ISpeedType — Tema inmersivo: BATALLA MANGA (Shonen)
+   Todo va dentro de body.theme-manga: sin la clase, esto no afecta a nada.
+   Estética: blanco y negro riguroso, viñetas de borde grueso, tramas de puntos.
+
+   Reglas de rendimiento (ver notas en styles.css):
+     - nada de text-shadow ni animaciones por letra en el texto principal;
+     - las letras solo cambian de color / fondo (se pintan, no recalculan layout);
+     - las líneas de velocidad, ondas de energía, globos y el K.O. son elementos
+       reutilizables (themes/manga.js) que solo animan transform / opacity.
+   =================================================== */
+
+body.theme-manga {
+    --mg-ink: #000;
+    --mg-paper: #f6f6f1;
+    --mg-white: #fff;
+    --mg-grey: #6b6b6b;
+
+    /* Variables globales de la app, redefinidas en blanco y negro */
+    --bg-primary: #f6f6f1;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #ffffff;
+    --bg-input: #ffffff;
+
+    --text-primary: #000000;
+    --text-secondary: #1c1c1c;
+    --text-muted: #555555;
+
+    --accent-primary: #000000;
+    --accent-primary-hover: #333333;
+    --accent-glow: transparent;
+    --accent-secondary: #000000;
+    --accent-secondary-glow: transparent;
+
+    --color-correct: #000000;
+    --color-correct-bg: transparent;
+    --color-error: #000000;
+    --color-error-bg: #000000;
+    --color-error-glow: transparent;
+    --color-current: #000000;
+    --color-current-bg: rgba(0, 0, 0, 0.14);
+    --color-pending: #767676;
+
+    --border-color: #000000;
+    --border-color-hover: #000000;
+
+    --glow-1: transparent;
+    --glow-2: transparent;
+    --glow-3: transparent;
+
+    --font-sans: 'Bangers', 'Impact', 'Haettenschweiler', 'Arial Narrow Bold', sans-serif;
+    --font-mono: 'Bangers', 'Impact', 'Haettenschweiler', 'Arial Narrow Bold', sans-serif;
+
+    /* Viñetas casi rectas, con esquinas ligeramente desiguales */
+    --radius-sm: 1px 3px 2px 3px;
+    --radius-md: 2px 4px 2px 5px;
+    --radius-lg: 2px 5px 3px 6px;
+    --radius-xl: 3px 6px 3px 7px;
+
+    /* Bangers solo existe en un peso: que el navegador no lo "engorde" */
+    font-synthesis: none;
+
+    /* Trama de puntos (halftone): fuerte en los bordes, el centro queda limpio para leer */
+    background-color: #f6f6f1;
+    background-image:
+        radial-gradient(ellipse at 50% 38%, #f6f6f1 34%, rgba(246, 246, 241, 0) 100%),
+        radial-gradient(circle, #000 0 1.25px, transparent 1.85px);
+    background-size: auto, 9px 9px;
+    background-attachment: fixed, scroll;
+    transition: none;
+}
+
+body.theme-manga .bg-glow {
+    display: none;
+}
+
+body.theme-manga .glass-card,
+body.theme-manga .glass-card-mini,
+body.theme-manga .theme-dropdown,
+body.theme-manga .theme-toggle-btn,
+body.theme-manga .achievement-toast {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* ---------- Encabezado ---------- */
+body.theme-manga .logo-text {
+    color: var(--mg-ink);
+    letter-spacing: 0.05em;
+}
+
+body.theme-manga .logo-accent {
+    color: var(--mg-ink);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    /* "Type" en negativo, como un rótulo de portada */
+    background-color: var(--mg-ink);
+    -webkit-text-fill-color: var(--mg-white);
+    padding: 0 6px;
+    margin-left: 2px;
+}
+
+body.theme-manga .logo-icon {
+    background: var(--mg-ink);
+    color: var(--mg-white);
+    border-radius: 2px 6px 3px 6px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+body.theme-manga .tagline {
+    color: var(--mg-ink);
+    letter-spacing: 0.08em;
+    background: var(--mg-paper);
+    display: inline-block;
+    padding: 0 10px;
+}
+
+body.theme-manga .theme-toggle-btn,
+body.theme-manga .achievements-toggle-btn,
+body.theme-manga .stats-toggle-btn,
+body.theme-manga .lang-switch {
+    background: var(--mg-white);
+    color: var(--mg-ink);
+    border: 3px solid var(--mg-ink);
+    box-shadow: 3px 3px 0 var(--mg-ink);
+}
+
+/* Selector de idioma, teclas (kbd) y rótulos: sin restos del violeta base */
+body.theme-manga .lang-btn {
+    color: var(--mg-ink);
+}
+
+body.theme-manga .lang-btn.active,
+body.theme-manga .lang-btn[aria-pressed="true"] {
+    background: var(--mg-ink);
+    color: var(--mg-white);
+    box-shadow: none;
+}
+
+body.theme-manga .lang-btn:focus-visible {
+    outline-color: var(--mg-ink);
+}
+
+body.theme-manga .card-description kbd,
+body.theme-manga .typing-hint kbd {
+    background: var(--mg-white);
+    border: 2px solid var(--mg-ink);
+    border-radius: 2px;
+    color: var(--mg-ink);
+    box-shadow: 2px 2px 0 var(--mg-ink);
+}
+
+/* La app pinta "RACHA" de verde con estilo en línea */
+body.theme-manga #combo-label {
+    color: var(--mg-ink) !important;
+}
+
+/* ---------- Tarjetas: viñetas ---------- */
+body.theme-manga .glass-card {
+    background: var(--mg-white);
+    border: 4px solid var(--mg-ink);
+    border-width: 4px 5px 5px 4px;
+    box-shadow: 7px 7px 0 var(--mg-ink);
+}
+
+body.theme-manga .glass-card:hover {
+    border-color: var(--mg-ink);
+}
+
+body.theme-manga .glass-card-mini {
+    background: var(--mg-white);
+    border: 4px solid var(--mg-ink);
+    box-shadow: 5px 5px 0 var(--mg-ink);
+}
+
+/* Estadísticas: pequeñas viñetas, cada una con su inclinación */
+body.theme-manga .stat-card:nth-child(odd) {
+    rotate: -0.9deg;
+}
+
+body.theme-manga .stat-card:nth-child(even) {
+    rotate: 0.7deg;
+}
+
+body.theme-manga .stat-value,
+body.theme-manga #wpm-display,
+body.theme-manga #accuracy-display,
+body.theme-manga #time-display {
+    color: var(--mg-ink);
+    letter-spacing: 0.04em;
+}
+
+body.theme-manga .stat-label {
+    letter-spacing: 0.1em;
+    color: var(--mg-ink);
+}
+
+body.theme-manga .card-icon,
+body.theme-manga .results-badge {
+    background: var(--mg-ink);
+    border: 3px solid var(--mg-ink);
+    color: var(--mg-white);
+}
+
+/* ---------- Pantalla de resultados ---------- */
+body.theme-manga .results-badge,
+body.theme-manga .results-card.game-over-state .results-badge,
+body.theme-manga .results-card.ghost-over-state .results-badge {
+    background: var(--mg-ink);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+    animation: none;
+}
+
+body.theme-manga .results-title,
+body.theme-manga .results-card.game-over-state .results-title,
+body.theme-manga .results-card.ghost-over-state .results-title {
+    background: none;
+    -webkit-text-fill-color: var(--mg-ink);
+    color: var(--mg-ink);
+    letter-spacing: 0.06em;
+}
+
+/* Derrota: el título en negativo, como un rótulo */
+body.theme-manga .results-card.game-over-state .results-title,
+body.theme-manga .results-card.ghost-over-state .results-title {
+    display: table;
+    margin: 0 auto 6px;
+    padding: 0 14px;
+    background: var(--mg-ink);
+    -webkit-text-fill-color: var(--mg-white);
+    color: var(--mg-white);
+}
+
+body.theme-manga .result-item {
+    background: var(--mg-white);
+    border: 3px solid var(--mg-ink);
+    box-shadow: 4px 4px 0 var(--mg-ink);
+}
+
+body.theme-manga .result-highlight {
+    background: var(--mg-ink);
+    border-color: var(--mg-ink);
+}
+
+body.theme-manga .result-highlight .result-number,
+body.theme-manga .result-highlight .result-label {
+    background: none;
+    -webkit-text-fill-color: var(--mg-white);
+    color: var(--mg-white);
+}
+
+body.theme-manga .result-number {
+    color: var(--mg-ink);
+}
+
+body.theme-manga .result-label {
+    color: var(--mg-ink);
+}
+
+/* ---------- Botones: bloques de tinta ---------- */
+body.theme-manga .btn,
+body.theme-manga .btn-practice-start,
+body.theme-manga .btn-tutor-start {
+    border: 3px solid var(--mg-ink);
+    border-radius: 2px 5px 2px 4px;
+    box-shadow: 4px 4px 0 var(--mg-ink);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: transform 0.08s ease-out, box-shadow 0.08s ease-out, background-color 0.08s, color 0.08s;
+}
+
+body.theme-manga .btn:hover,
+body.theme-manga .btn-practice-start:hover,
+body.theme-manga .btn-tutor-start:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--mg-ink);
+}
+
+body.theme-manga .btn:active,
+body.theme-manga .btn-practice-start:active,
+body.theme-manga .btn-tutor-start:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--mg-ink);
+}
+
+body.theme-manga .btn-primary,
+body.theme-manga .btn-tutor-start {
+    background: var(--mg-ink);
+    color: var(--mg-white);
+}
+
+body.theme-manga .btn-primary:hover,
+body.theme-manga .btn-tutor-start:hover {
+    background: var(--mg-white);
+    color: var(--mg-ink);
+}
+
+body.theme-manga .btn-secondary,
+body.theme-manga .btn-ghost {
+    background: var(--mg-white);
+    color: var(--mg-ink);
+}
+
+body.theme-manga .btn-secondary:hover,
+body.theme-manga .btn-ghost:hover {
+    background: var(--mg-ink);
+    color: var(--mg-white);
+    border-color: var(--mg-ink);
+}
+
+/* Botón de práctica: sobre trama de puntos */
+body.theme-manga .btn-practice-start {
+    background:
+        radial-gradient(circle, #000 0 1px, transparent 1.6px) 0 0 / 5px 5px,
+        var(--mg-white);
+    color: var(--mg-ink);
+}
+
+body.theme-manga .btn-practice-start:hover {
+    background: var(--mg-ink);
+    color: var(--mg-white);
+}
+
+body.theme-manga .btn-diff {
+    background: var(--mg-white);
+    color: var(--mg-ink);
+    border: 3px solid var(--mg-ink);
+    box-shadow: 3px 3px 0 var(--mg-ink);
+}
+
+body.theme-manga .btn-diff:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+body.theme-manga .btn-diff.active,
+body.theme-manga .btn-diff.diff-hardcore.active {
+    background: var(--mg-ink);
+    color: var(--mg-white);
+    border-color: var(--mg-ink);
+}
+
+/* ---------- Campos de texto ---------- */
+body.theme-manga .text-input,
+body.theme-manga .typing-input {
+    background: var(--mg-white);
+    color: var(--mg-ink);
+    border: 4px solid var(--mg-ink);
+    box-shadow: 4px 4px 0 var(--mg-ink);
+}
+
+body.theme-manga .text-input:focus,
+body.theme-manga .typing-input:focus {
+    border-color: var(--mg-ink);
+    box-shadow: 6px 6px 0 var(--mg-ink);
+}
+
+body.theme-manga .typing-input.has-error {
+    border-color: var(--mg-ink);
+    box-shadow: 6px 6px 0 var(--mg-ink);
+    animation: none;
+}
+
+body.theme-manga .text-input::placeholder,
+body.theme-manga .typing-input::placeholder {
+    color: var(--mg-grey);
+}
+
+/* ---------- Texto a escribir ---------- */
+body.theme-manga #text-display {
+    font-size: 1.45rem;
+    letter-spacing: 0.07em;
+    line-height: 1.7;
+    scrollbar-color: var(--mg-ink) transparent;
+}
+
+body.theme-manga #text-display::-webkit-scrollbar-thumb {
+    background: var(--mg-ink);
+}
+
+body.theme-manga #text-display .char {
+    transition: none;
+}
+
+/* Letra por escribir: gris de tinta suave */
+body.theme-manga #text-display .char.char-pending {
+    color: var(--color-pending);
+}
+
+/* Letra acertada: tinta negra con aura estática (efecto Ki).
+   Solo color y fondo: se pinta, no recalcula el layout. */
+body.theme-manga #text-display .char.char-correct {
+    color: var(--mg-ink);
+    background-image: radial-gradient(closest-side, rgba(0, 0, 0, 0.13), transparent 90%);
+    background-repeat: no-repeat;
+    background-position: 50% 55%;
+    background-size: 150% 115%;
+}
+
+/* La racha de la app fuerza verde: aquí se mantiene el negro */
+body.theme-manga #text-display.on-fire .char.char-correct {
+    color: var(--mg-ink) !important;
+}
+
+/* Error: letra en negativo (blanco sobre negro) */
+body.theme-manga #text-display .char.char-error {
+    color: var(--mg-white);
+    background-color: var(--mg-ink);
+    background-image: none;
+    text-decoration: none;
+    animation: none;
+}
+
+/* ---------- Medidor de combo: marcador de poder ---------- */
+body.theme-manga #combo-stat-card {
+    border-width: 4px;
+}
+
+body.theme-manga .combo-highlight,
+body.theme-manga #combo-count {
+    color: var(--mg-ink);
+    text-shadow: none;
+}
+
+body.theme-manga #combo-stat-card.mg-power {
+    background:
+        repeating-conic-gradient(from 0deg at 50% 50%, #000 0 2.5deg, #fff 2.5deg 12deg);
+}
+
+body.theme-manga #combo-stat-card.mg-power > * {
+    background: var(--mg-white);
+    padding: 0 8px;
+}
+
+/* Vidas: número en tinta y golpe de daño sin destello rosa */
+body.theme-manga #lives-count,
+body.theme-manga #lives-stat-card .stat-value {
+    color: var(--mg-ink) !important;
+}
+
+body.theme-manga .damage-hit {
+    animation: none;
+}
+
+/* ---------- Racha activa (fuego) ---------- */
+body.theme-manga .typing-card.on-fire {
+    border-color: var(--mg-ink) !important;
+    box-shadow: 9px 9px 0 var(--mg-ink) !important;
+}
+
+body.theme-manga .typing-input.on-fire-border {
+    border-color: var(--mg-ink) !important;
+    box-shadow: 6px 6px 0 var(--mg-ink) !important;
+}
+
+/* ---------- Barra de progreso: barra de energía ---------- */
+body.theme-manga .progress-bar-container {
+    height: 14px;
+    border: 3px solid var(--mg-ink);
+    background: var(--mg-white);
+    border-radius: 1px;
+}
+
+body.theme-manga .progress-bar-fill {
+    background: repeating-linear-gradient(-45deg, #000 0 6px, #333 6px 9px);
+    box-shadow: none;
+    border-radius: 0;
+}
+
+body.theme-manga .progress-bar-fill::after {
+    display: none;
+}
+
+body.theme-manga .progress-text {
+    color: var(--mg-ink);
+}
+
+/* ---------- Cuenta atrás ---------- */
+body.theme-manga .countdown-overlay {
+    background: rgba(255, 255, 255, 0.94);
+    border: 4px solid var(--mg-ink);
+    box-shadow: none;
+}
+
+body.theme-manga .countdown-content,
+body.theme-manga .countdown-number,
+body.theme-manga .countdown-label {
+    color: var(--mg-ink);
+    -webkit-text-fill-color: var(--mg-ink);
+    background: none;
+}
+
+/* ---------- Menú de temas ---------- */
+body.theme-manga .theme-dropdown {
+    background: var(--mg-white);
+    border: 4px solid var(--mg-ink);
+    box-shadow: 6px 6px 0 var(--mg-ink);
+}
+
+body.theme-manga .theme-option,
+body.theme-manga .immersive-option,
+body.theme-manga .immersive-sound {
+    color: var(--mg-ink);
+}
+
+body.theme-manga .theme-option:hover,
+body.theme-manga .theme-option:focus-visible,
+body.theme-manga .immersive-option:hover,
+body.theme-manga .immersive-option:focus-visible,
+body.theme-manga .immersive-sound:hover,
+body.theme-manga .immersive-sound:focus-visible {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--mg-ink);
+    border-color: var(--mg-ink);
+}
+
+body.theme-manga .immersive-option.active {
+    background: var(--mg-ink);
+    color: var(--mg-white);
+    border-color: var(--mg-ink);
+}
+
+body.theme-manga .immersive-section {
+    border-top-color: var(--mg-ink);
+}
+
+body.theme-manga .immersive-toast {
+    background: var(--mg-white);
+    color: var(--mg-ink);
+    border: 3px solid var(--mg-ink);
+    box-shadow: 5px 5px 0 var(--mg-ink);
+}
+
+/* ===================================================
+   Efectos (los crea themes/manga.js)
+   =================================================== */
+
+/* Líneas de velocidad en los bordes de la pantalla (combo alto) */
+.mg-lines {
+    position: fixed;
+    inset: -30%;
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease-out;
+    background:
+        repeating-conic-gradient(from 3deg at 50% 50%, #000 0 0.7deg, transparent 0.7deg 5.3deg),
+        repeating-conic-gradient(from 1deg at 50% 50%, #000 0 0.4deg, transparent 0.4deg 3.1deg);
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 52%, #000 74%);
+    mask-image: radial-gradient(circle at 50% 50%, transparent 52%, #000 74%);
+}
+
+.mg-lines.mg-lines-on {
+    opacity: 0.55;
+    animation: mg-lines-flick 0.16s steps(2, jump-none) infinite;
+}
+
+.mg-lines.mg-lines-max {
+    opacity: 0.9;
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 40%, #000 66%);
+    mask-image: radial-gradient(circle at 50% 50%, transparent 40%, #000 66%);
+}
+
+/* Parpadeo de cómic: la trama "salta" entre dos posiciones */
+@keyframes mg-lines-flick {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+
+    100% {
+        transform: rotate(1.5deg) scale(1.03);
+    }
+}
+
+.mg-fx {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 40;
+}
+
+.mg-fx-item {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    pointer-events: none;
+    will-change: transform, opacity;
+}
+
+/* Onda de energía (Ki) al completar una palabra sin errores:
+   anillo de líneas radiales que se expande y se desvanece. */
+.mg-fx-item.mg-aura {
+    width: 100px;
+    height: 100px;
+    background: repeating-conic-gradient(from 0deg at 50% 50%, #000 0 3deg, transparent 3deg 10deg);
+    -webkit-mask-image: radial-gradient(closest-side, transparent 52%, #000 60%, transparent 100%);
+    mask-image: radial-gradient(closest-side, transparent 52%, #000 60%, transparent 100%);
+}
+
+/* Impacto: estrella de choque con la letra fallada vibrando dentro */
+.mg-fx-item.mg-pow {
+    width: 58px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--mg-ink);
+    color: var(--mg-white);
+    font-family: 'Bangers', 'Impact', sans-serif;
+    font-size: 1.3rem;
+    line-height: 1;
+    clip-path: polygon(50.0% 0.0%, 57.0% 23.9%, 75.0% 6.7%, 69.1% 30.9%, 93.3% 25.0%, 76.1% 43.0%, 100.0% 50.0%, 76.1% 57.0%, 93.3% 75.0%, 69.1% 69.1%, 75.0% 93.3%, 57.0% 76.1%, 50.0% 100.0%, 43.0% 76.1%, 25.0% 93.3%, 30.9% 69.1%, 6.7% 75.0%, 23.9% 57.0%, 0.0% 50.0%, 23.9% 43.0%, 6.7% 25.0%, 30.9% 30.9%, 25.0% 6.7%, 43.0% 23.9%);
+}
+
+/* Globo de onomatopeya de dolor */
+.mg-fx-item.mg-bubble {
+    padding: 3px 13px 4px;
+    background: var(--mg-white);
+    color: var(--mg-ink);
+    border: 3px solid var(--mg-ink);
+    border-radius: 50% / 46%;
+    font-family: 'Bangers', 'Impact', sans-serif;
+    font-size: 1.35rem;
+    letter-spacing: 0.08em;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+/* Cola del globo (borde negro + relleno blanco) */
+.mg-fx-item.mg-bubble::before,
+.mg-fx-item.mg-bubble::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    border-style: solid;
+    border-color: transparent;
+}
+
+.mg-fx-item.mg-bubble::before {
+    bottom: -15px;
+    margin-left: -9px;
+    border-width: 13px 9px 0;
+    border-top-color: var(--mg-ink);
+}
+
+.mg-fx-item.mg-bubble::after {
+    bottom: -9px;
+    margin-left: -6px;
+    border-width: 10px 6px 0;
+    border-top-color: var(--mg-white);
+}
+
+/* ¡K.O.! de fin de partida */
+.mg-ko {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.92) 0 30%, rgba(255, 255, 255, 0) 70%);
+}
+
+.mg-ko-burst {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    margin: -75vmax 0 0 -75vmax;
+    background: repeating-conic-gradient(from 0deg at 50% 50%, #000 0 2deg, transparent 2deg 9deg);
+    -webkit-mask-image: radial-gradient(circle, transparent 12%, #000 40%, transparent 70%);
+    mask-image: radial-gradient(circle, transparent 12%, #000 40%, transparent 70%);
+    opacity: 0.85;
+}
+
+.mg-ko-text {
+    position: relative;
+    font-family: 'Bangers', 'Impact', sans-serif;
+    font-size: clamp(5rem, 24vw, 15rem);
+    letter-spacing: 0.04em;
+    line-height: 1;
+    color: var(--mg-white);
+    -webkit-text-stroke: 0.09em var(--mg-ink);
+    paint-order: stroke fill;
+    text-shadow: 0.06em 0.06em 0 var(--mg-ink);
+    transform: rotate(-6deg);
+}
+
+/* ---------- Accesibilidad: sin movimiento extra ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .mg-lines.mg-lines-on {
+        animation: none;
+    }
+
+    .mg-lines {
+        transition: none;
+    }
+
+    body.theme-manga .btn,
+    body.theme-manga .btn-practice-start,
+    body.theme-manga .btn-tutor-start {
+        transition: none;
+    }
+}

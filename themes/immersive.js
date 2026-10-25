@@ -91,6 +91,46 @@
         // ¿Se puede sonar ahora mismo?
         ready() {
             return !!(audio.ctx && audio.ctx.state === 'running' && audio.enabled);
+        },
+
+        // ---- Voces básicas reutilizables por cualquier tema (llamar solo si ready()) ----
+
+        // Golpe de ruido filtrado. o: { freq, freq2?, q?, type?, gain, dur, attack? }
+        // (freq2: el filtro barre de freq a freq2 durante el golpe).
+        noiseHit(t0, o) {
+            const ctx = audio.ctx;
+            const src = ctx.createBufferSource();
+            src.buffer = audio.noise;
+            const flt = ctx.createBiquadFilter();
+            flt.type = o.type || 'bandpass';
+            flt.frequency.setValueAtTime(o.freq, t0);
+            if (o.freq2) flt.frequency.exponentialRampToValueAtTime(o.freq2, t0 + o.dur);
+            flt.Q.value = o.q || 1;
+            const g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t0);
+            g.gain.exponentialRampToValueAtTime(o.gain, t0 + (o.attack || 0.003));
+            g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
+            src.connect(flt);
+            flt.connect(g);
+            g.connect(audio.out);
+            src.start(t0, Math.random() * 0.5, o.dur + 0.05);
+        },
+
+        // Tono con caída o subida de frecuencia. o: { f0, f1?, type?, gain, dur }
+        tone(t0, o) {
+            const ctx = audio.ctx;
+            const osc = ctx.createOscillator();
+            osc.type = o.type || 'sine';
+            osc.frequency.setValueAtTime(o.f0, t0);
+            if (o.f1) osc.frequency.exponentialRampToValueAtTime(o.f1, t0 + o.dur);
+            const g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t0);
+            g.gain.exponentialRampToValueAtTime(o.gain, t0 + 0.004);
+            g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
+            osc.connect(g);
+            g.connect(audio.out);
+            osc.start(t0);
+            osc.stop(t0 + o.dur + 0.02);
         }
     };
 
