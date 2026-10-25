@@ -3,6 +3,9 @@
 (function () {
     'use strict';
 
+    // Traducción: I18N.t(clave, variables). Definido en i18n/i18n.js
+    const tr = (key, vars) => window.I18N.t(key, vars);
+
     // ===== DOM Elements =====
     const setupSection = document.getElementById('setup-section');
     const typingSection = document.getElementById('typing-section');
@@ -323,7 +326,7 @@
         // --- Random Texts events ---
         function setRandomText(type) {
             hideAntiCheatWarning();
-            const textsArray = typingTexts[type];
+            const textsArray = textBank()[type];
             if (textsArray && textsArray.length > 0) {
                 const randomIndex = Math.floor(Math.random() * textsArray.length);
                 textInput.value = textsArray[randomIndex];
@@ -538,9 +541,10 @@
 
     // ===== Pick random text across ALL available categories =====
     function getRandomTextFromAll() {
-        const allCategories = Object.keys(typingTexts);
+        const bank = textBank();
+        const allCategories = Object.keys(bank);
         const randomCat = allCategories[Math.floor(Math.random() * allCategories.length)];
-        const categoryArray = typingTexts[randomCat];
+        const categoryArray = bank[randomCat];
         return categoryArray[Math.floor(Math.random() * categoryArray.length)];
     }
 
@@ -586,16 +590,22 @@
         const nextChar = cursorIndex < characters.length ? characters[cursorIndex] : null;
 
         if (typedChars.length >= characters.length) {
-            typingInput.placeholder = '¡Texto completado!';
+            typingInput.placeholder = tr('ph.done');
         } else if (isDeadzoneMode && isDeadKeyChar(nextChar)) {
-            typingInput.placeholder = '¡Tecla rota! Pulsa [Espacio]...';
+            typingInput.placeholder = tr('ph.deadkey');
         } else if (target === '[Espacio]') {
-            typingInput.placeholder = 'Pulsa espacio...';
+            typingInput.placeholder = tr('ph.space');
         } else if (target) {
-            typingInput.placeholder = `Escribe: ${target}`;
+            typingInput.placeholder = tr('ph.type', { w: target });
         } else {
-            typingInput.placeholder = 'Empieza a escribir aquí...';
+            typingInput.placeholder = tr('ph.start');
         }
+    }
+
+    // Banco de textos según el idioma activo (texts.js = español, texts-en.js = inglés)
+    function textBank() {
+        if (window.I18N.lang === 'en' && typeof typingTextsEn !== 'undefined') return typingTextsEn;
+        return typingTexts;
     }
 
     // ===== Theme =====
@@ -612,11 +622,17 @@
 
     // ===== ANTI-CHEAT & CUSTOM TEXT VALIDATION =====
     function checkIfSystemText(text) {
-        if (!text || typeof typingTexts === 'undefined') return false;
+        if (!text) return false;
         const normalized = text.trim();
-        for (const cat in typingTexts) {
-            if (typingTexts[cat] && typingTexts[cat].some(t => t.trim() === normalized)) {
-                return true;
+        // Un texto predefinido cuenta como "del sistema" en cualquiera de los dos idiomas
+        const banks = [];
+        if (typeof typingTexts !== 'undefined') banks.push(typingTexts);
+        if (typeof typingTextsEn !== 'undefined') banks.push(typingTextsEn);
+        for (const bank of banks) {
+            for (const cat in bank) {
+                if (bank[cat] && bank[cat].some(t => t.trim() === normalized)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -624,20 +640,20 @@
 
     function validateCustomText(text) {
         if (!text || typeof text !== 'string') {
-            return { isValid: false, reason: 'El texto no puede estar vacío.' };
+            return { isValid: false, reason: tr('ac.empty') };
         }
 
         // Limpieza de espacios dobles y saltos de línea innecesarios
         const cleanText = text.trim().replace(/\s+/g, ' ');
         if (cleanText.length === 0) {
-            return { isValid: false, reason: 'El texto no puede estar vacío.' };
+            return { isValid: false, reason: tr('ac.empty') };
         }
 
         const words = cleanText.split(' ').filter(w => w.length > 0);
         const totalWords = words.length;
 
         if (totalWords < 3) {
-            return { isValid: false, reason: 'El texto debe contener al menos 3 palabras.' };
+            return { isValid: false, reason: tr('ac.min3') };
         }
 
         // Filtro 1: Longitud Mínima de Palabras Únicas (Diversidad Léxica >= 40% si totalWords > 10)
@@ -651,7 +667,7 @@
         if (totalWords > 10 && lexicalDiversity < 40) {
             return {
                 isValid: false,
-                reason: `Diversidad léxica muy baja (${Math.round(lexicalDiversity)}%). El texto debe tener al menos 40% de palabras únicas.`
+                reason: tr('ac.diversity', { pct: Math.round(lexicalDiversity) })
             };
         }
 
@@ -661,7 +677,7 @@
             if (repetitiveRegex.test(word)) {
                 return {
                     isValid: false,
-                    reason: `Patrón repetitivo detectado en "${word}". No se permiten más de 3 caracteres iguales seguidos.`
+                    reason: tr('ac.repeat', { w: word })
                 };
             }
         }
@@ -673,14 +689,14 @@
         if (avgWordLength < 2.5) {
             return {
                 isValid: false,
-                reason: `Palabras demasiado cortas (promedio: ${avgWordLength.toFixed(1)} letras). El promedio mínimo es 2.5.`
+                reason: tr('ac.short', { avg: avgWordLength.toFixed(1) })
             };
         }
 
         if (avgWordLength > 15) {
             return {
                 isValid: false,
-                reason: `Palabras excesivamente largas (promedio: ${avgWordLength.toFixed(1)} letras). Incluye espacios naturales.`
+                reason: tr('ac.long', { avg: avgWordLength.toFixed(1) })
             };
         }
 
@@ -703,7 +719,7 @@
             startBtn.classList.add('shake-error');
         }
         if (anticheatWarningDesc) {
-            anticheatWarningDesc.textContent = reason || 'Asegúrate de usar un texto real con palabras variadas.';
+            anticheatWarningDesc.textContent = reason || tr('ui.anticheat-warning-desc');
         }
         if (anticheatWarning) {
             anticheatWarning.classList.remove('hidden', 'shake-error');
@@ -899,18 +915,18 @@
         }
 
         let currentCount = 3;
-        triggerPulse('3', '¡Prepárate!');
+        triggerPulse('3', tr('cd.ready'));
 
         countdownInterval = setInterval(() => {
             currentCount--;
             if (currentCount === 2) {
-                triggerPulse('2', '¡Listo!');
+                triggerPulse('2', tr('cd.set'));
             } else if (currentCount === 1) {
-                triggerPulse('1', '¡A escribir!');
+                triggerPulse('1', tr('cd.type'));
             } else if (currentCount === 0) {
                 clearInterval(countdownInterval);
                 countdownInterval = null;
-                triggerPulse('¡YA!', '¡Adelante!');
+                triggerPulse(tr('cd.go'), tr('cd.goLabel'));
 
                 countdownTimeout = setTimeout(() => {
                     countdownOverlay.classList.add('hidden');
@@ -1578,7 +1594,7 @@
         textDisplay.classList.add('on-fire');
         typingInput.classList.add('on-fire-border');
         if (comboLabelDisplay) {
-            comboLabelDisplay.textContent = '⚡ RACHA';
+            comboLabelDisplay.textContent = tr('combo.fire');
             comboLabelDisplay.style.color = '#22c55e';
         }
     }
@@ -1588,7 +1604,7 @@
         textDisplay.classList.remove('on-fire');
         typingInput.classList.remove('on-fire-border');
         if (comboLabelDisplay) {
-            comboLabelDisplay.textContent = 'Combo';
+            comboLabelDisplay.textContent = tr('ui.combo-label');
             comboLabelDisplay.style.color = '';
         }
     }
@@ -1723,6 +1739,10 @@
         return { id, titulo, descripcion, categoria, icono, completado: false, fecha: null };
     }
 
+    // Textos de logros: el español vive aquí (datos) y el inglés en i18n/en.js (claves ach.<id>.t / .d)
+    function achTitle(a) { return window.I18N.lang === 'en' ? window.I18N.t('ach.' + a.id + '.t') : a.titulo; }
+    function achDesc(a) { return window.I18N.lang === 'en' ? window.I18N.t('ach.' + a.id + '.d') : a.descripcion; }
+
     const ACHIEVEMENTS_LIST = [
         // 1. Rachas de palabras correctas seguidas (sin cometer errores)
         ach('racha-10', 'Calentando Motores', 'Conseguir una racha de 10 palabras seguidas sin cometer errores.', 'rachas', '🔥'),
@@ -1818,7 +1838,7 @@
     // estadísticas guardadas ya cumplen (así nadie pierde progreso al añadir niveles).
     function migrateAchievementProgress() {
         const byId = id => ACHIEVEMENTS_LIST.find(a => a.id === id);
-        const hoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+        const hoy = new Date().toLocaleDateString(window.I18N.locale, { day: '2-digit', month: 'short', year: 'numeric' });
         let changed = false;
 
         const marcar = (id, fecha) => {
@@ -1901,17 +1921,17 @@
                 <div class="ach-card-top">
                     <span class="ach-card-icon">${ach.icono}</span>
                     <span class="ach-status-badge">
-                        ${ach.completado ? '✓ Desbloqueado' : '🔒 Bloqueado'}
+                        ${ach.completado ? tr('ach.unlocked') : tr('ach.locked')}
                     </span>
                 </div>
-                <div class="ach-card-title">${ach.titulo}</div>
-                <div class="ach-card-desc">${ach.descripcion}</div>
+                <div class="ach-card-title">${achTitle(ach)}</div>
+                <div class="ach-card-desc">${achDesc(ach)}</div>
                 ${ach.completado && ach.fecha ? `
                     <div class="ach-card-date">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
-                        Desbloqueado: ${ach.fecha}
+                        ${tr('ach.unlockedOn')} ${ach.fecha}
                     </div>
                 ` : ''}
             `;
@@ -1950,7 +1970,7 @@
         // 2. Cambiar inmediatamente el estado a true
         ach.completado = true;
         const now = new Date();
-        const formattedDate = now.toLocaleDateString('es-ES', {
+        const formattedDate = now.toLocaleDateString(window.I18N.locale, {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
@@ -1967,7 +1987,7 @@
             renderAchievementsGrid();
 
             // 5. Disparar notificación toast visual
-            showAchievementToast(ach.icono, ach.titulo, ach.descripcion);
+            showAchievementToast(ach.icono, achTitle(ach), achDesc(ach));
         } catch (err) {
             console.error('Error al mostrar el logro:', err);
         }
@@ -2035,7 +2055,7 @@
         toast.innerHTML = `
             <div class="achievement-icon">${icon}</div>
             <div class="achievement-text">
-                <span class="achievement-badge">🏆 ¡Logro Desbloqueado!</span>
+                <span class="achievement-badge">${tr('ach.toast')}</span>
                 <span class="achievement-title">${title}</span>
                 <span class="achievement-desc">${desc}</span>
             </div>
@@ -2055,6 +2075,17 @@
     }
 
     // ===== Historial de partidas (alimenta el panel de Estadísticas) =====
+    // Título y subtítulo de resultados según cómo terminó la partida (se re-traducen al cambiar de idioma)
+    let resultsKind = 'ok';
+    function setResultsTexts(kind) {
+        resultsKind = kind;
+        const k = kind === 'ghost' ? ['res.ghostTitle', 'res.ghostSub']
+            : kind === 'gameover' ? ['res.gameover', 'res.gameoverSub']
+            : ['ui.results-title', 'ui.results-subtitle'];
+        resultsTitle.textContent = tr(k[0]);
+        resultsSubtitle.textContent = tr(k[1]);
+    }
+
     function difficultyLabel() {
         if (isLivesMode) return maxLives + (maxLives === 1 ? ' vida' : ' vidas');
         if (isFadeMode) return fadeWpm + ' WPM';
@@ -2096,7 +2127,7 @@
 
         // Block input immediately
         typingInput.disabled = true;
-        typingInput.value = '¡DESVANECIDO!';
+        typingInput.value = tr('res.faded');
 
         const elapsed = getElapsedSeconds();
         const minutes = elapsed / 60;
@@ -2113,8 +2144,7 @@
         resultsCard.classList.remove('game-over-state');
         resultsCard.classList.add('ghost-over-state');
         registrarPartida('ghost', wpm, accuracy, elapsed);
-        resultsTitle.textContent = '¡Te atrapó la sombra!';
-        resultsSubtitle.textContent = 'El desvanecimiento alcanzó una letra incorrecta o te quedaste atrás';
+        setResultsTexts('ghost');
 
         setTimeout(() => {
             showSection('results');
@@ -2148,8 +2178,7 @@
 
         // Reset results card to normal state
         resultsCard.classList.remove('game-over-state', 'ghost-over-state');
-        resultsTitle.textContent = '¡Prueba completada!';
-        resultsSubtitle.textContent = 'Aquí están tus resultados';
+        setResultsTexts('ok');
 
         // Fill results
         resultWpm.textContent = wpm;
@@ -2187,7 +2216,7 @@
 
         // Block input immediately
         typingInput.disabled = true;
-        typingInput.value = '¡GAME OVER!';
+        typingInput.value = tr('res.gameover');
 
         const elapsed = getElapsedSeconds();
         const minutes = elapsed / 60;
@@ -2205,8 +2234,7 @@
 
         // Style results card as Game Over
         resultsCard.classList.add('game-over-state');
-        resultsTitle.textContent = '¡GAME OVER!';
-        resultsSubtitle.textContent = 'Te has quedado sin vidas — modo supervivencia';
+        setResultsTexts('gameover');
 
         // Show results after a short delay
         setTimeout(() => {
@@ -2244,38 +2272,12 @@
     // 7. MÓDULO: MOTOR DEL MODO APRENDIZAJE (TOUCH TYPING TUTOR)
     // ===================================================
 
-    const TUTOR_LESSONS = [
-        {
-            level: 1,
-            title: "Nivel 1 — Fila Guía",
-            text: "asdf jklñ asdf jklñ fads jkal dask fñlj"
-        },
-        {
-            level: 2,
-            title: "Nivel 2 — Extensiones Superiores (e, i)",
-            text: "asde jkli feda lise eñid kase dief sial"
-        },
-        {
-            level: 3,
-            title: "Nivel 3 — Fila Superior Completa",
-            text: "quer tipo wert yuio prue quie rope tupi"
-        },
-        {
-            level: 4,
-            title: "Nivel 4 — Fila Inferior Completa",
-            text: "zxcv bnmz cxvb nmzx vbnm zcxv bcnm vxzc"
-        },
-        {
-            level: 5,
-            title: "Nivel 5 — Palabras Cortas Reales",
-            text: "el dado de seda la casa de ana ese sol sale"
-        },
-        {
-            level: 6,
-            title: "Nivel 6 — Mayúsculas y Puntuación",
-            text: "Ana sale. El sol, la luna. Esa casa, de seda."
-        }
-    ];
+    // Las lecciones (título y texto) viven en los diccionarios: tutor.l<n>.title / tutor.l<n>.text
+    const TUTOR_LESSONS = [1, 2, 3, 4, 5, 6].map(level => ({
+        level,
+        get title() { return tr('tutor.l' + level + '.title'); },
+        get text() { return tr('tutor.l' + level + '.text'); }
+    }));
 
     const CHAR_TO_FINGER_MAP = {
         // Meñique Izquierdo (1, Q, A, Z)
@@ -2315,7 +2317,7 @@
 
         // Meñique Derecho (0, P, Ñ, guión, etc.)
         '0': 'finger-right-pinky', 'p': 'finger-right-pinky', 'P': 'finger-right-pinky',
-        'ñ': 'finger-right-pinky', 'Ñ': 'finger-right-pinky', '-': 'finger-right-pinky'
+        'ñ': 'finger-right-pinky', 'Ñ': 'finger-right-pinky', ';': 'finger-right-pinky', '-': 'finger-right-pinky'
     };
 
     function updateTutorActiveKey() {
@@ -2462,10 +2464,12 @@
 
                 if (tutorNextBtn) {
                     if (tutorCurrentLevel < TUTOR_LESSONS.length) {
-                        tutorNextBtn.textContent = `Avanzar a Nivel ${tutorCurrentLevel + 1} →`;
+                        tutorNextDynamic = true;
+                        tutorNextBtn.textContent = tr('tutor.nextLevel', { n: tutorCurrentLevel + 1 });
                         tutorNextBtn.classList.remove('hidden');
                     } else {
-                        tutorNextBtn.textContent = '¡Todos los niveles completados! 🏆';
+                        tutorNextDynamic = true;
+                        tutorNextBtn.textContent = tr('tutor.allDone');
                         tutorNextBtn.classList.remove('hidden');
                     }
                 }
@@ -2499,6 +2503,9 @@
         }
     }
 
+    // true cuando el botón "siguiente" muestra un texto dinámico (para re-traducirlo al cambiar de idioma)
+    let tutorNextDynamic = false;
+
     function updateTutorLevelButtons() {
         tutorLevelBtns.forEach(btn => {
             const lvl = parseInt(btn.dataset.level, 10);
@@ -2506,8 +2513,8 @@
             btn.classList.toggle('completed', lvl < tutorUnlockedLevel);
             btn.classList.toggle('locked', lvl > tutorUnlockedLevel);
             btn.title = lvl > tutorUnlockedLevel
-                ? `Nivel ${lvl} bloqueado. Completa el Nivel ${lvl - 1} primero.`
-                : `Nivel ${lvl}`;
+                ? tr('tutor.levelLocked', { n: lvl, prev: lvl - 1 })
+                : tr('tutor.levelN', { n: lvl });
         });
     }
 
@@ -2523,7 +2530,7 @@
                 lockedBtn.classList.add('shake-error');
                 setTimeout(() => lockedBtn.classList.remove('shake-error'), 450);
             }
-            showAchievementToast('🔒', 'Nivel Bloqueado', `Debes completar el Nivel ${tutorUnlockedLevel} primero para continuar.`);
+            showAchievementToast('🔒', tr('tutor.lockedTitle'), tr('tutor.lockedDesc', { n: tutorUnlockedLevel }));
             return;
         }
 
@@ -2541,6 +2548,8 @@
 
         if (tutorNextBtn) {
             tutorNextBtn.classList.add('hidden');
+            tutorNextDynamic = false;
+            tutorNextBtn.textContent = tr('ui.tutor-next-btn');
         }
 
         renderTutorText();
@@ -2713,6 +2722,37 @@
         activarModoJuego(name !== 'setup', nombreModoActual());
     }
 
+    // ===== Cambio de idioma: re-traducir lo que se genera desde JS =====
+    function refreshDynamicLanguage() {
+        // Logros
+        updateAchievementsBadge();
+        renderAchievementsGrid();
+        // Botón de combo
+        if (comboLabelDisplay) comboLabelDisplay.textContent = isOnFire ? tr('combo.fire') : tr('ui.combo-label');
+        // Resultados
+        if (resultsKind) setResultsTexts(resultsKind);
+        // Teclado del tutor: en inglés la tecla de la derecha del home row es ";"
+        const ntilde = document.getElementById('kb-key-ntilde');
+        if (ntilde) {
+            const isEn = window.I18N.lang === 'en';
+            ntilde.setAttribute('data-key', isEn ? ';' : 'ñ');
+            ntilde.textContent = isEn ? ';' : 'Ñ';
+        }
+        if (isTutorMode) {
+            loadTutorLevel(tutorCurrentLevel);   // recarga lección, título y teclas
+        } else {
+            updateTutorLevelButtons();
+        }
+        // Pista del cuadro de escritura
+        if (typeof syncInputBox === 'function' && !typingSection.classList.contains('hidden') && !typingInput.disabled) syncInputBox();
+        // Aviso anti-trampas visible: el motivo ya no es válido en el nuevo idioma
+        hideAntiCheatWarning();
+        // Panel de Estadísticas
+        if (window.SpeedStats && window.SpeedStats.refreshLanguage) window.SpeedStats.refreshLanguage();
+    }
+    window.I18N.onChange(refreshDynamicLanguage);
+
     // ===== Start App =====
     init();
+    refreshDynamicLanguage();
 })();

@@ -16,26 +16,30 @@
     const MAX_DAYS = 800;
     const CHART_POINTS = 30;
 
+    const tr = (k, v) => window.I18N.t(k, v);
+    const modeName = (id) => tr('mode.' + id);
+
     const MODOS = [
-        { id: 'clasico', nombre: 'Clásico', icono: '⌨️' },
-        { id: 'vidas', nombre: 'Vidas', icono: '❤️' },
-        { id: 'desvanecer', nombre: 'Desvanecimiento', icono: '👻' },
-        { id: 'tormenta', nombre: 'Tormenta Eléctrica', icono: '⚡' },
-        { id: 'punto-muerto', nombre: 'Punto Muerto', icono: '🔒' }
+        { id: 'clasico', get nombre() { return modeName('clasico'); }, icono: '⌨️' },
+        { id: 'vidas', get nombre() { return modeName('vidas'); }, icono: '❤️' },
+        { id: 'desvanecer', get nombre() { return modeName('desvanecer'); }, icono: '👻' },
+        { id: 'tormenta', get nombre() { return modeName('tormenta'); }, icono: '⚡' },
+        { id: 'punto-muerto', get nombre() { return modeName('punto-muerto'); }, icono: '🔒' }
     ];
     const NOMBRE_MODO = {};
-    MODOS.forEach(m => { NOMBRE_MODO[m.id] = m.nombre; });
+    MODOS.forEach(m => { NOMBRE_MODO[m.id] = true; });
 
     const CATEGORIAS_LOGROS = [
-        ['rachas', '🔥 Rachas'],
-        ['velocidad', '⚡ Velocidad'],
-        ['precision', '🎯 Precisión'],
-        ['vidas', '❤️ Supervivencia'],
-        ['modos', '🎮 Modos'],
-        ['persistencia', '👑 Persistencia']
+        ['rachas', 'ui.cat-streaks'],
+        ['velocidad', 'ui.cat-speed'],
+        ['precision', 'ui.cat-precision'],
+        ['vidas', 'ui.cat-lives'],
+        ['modos', 'ui.cat-modes'],
+        ['persistencia', 'ui.cat-persist']
     ];
 
-    const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    // Lunes a domingo, traducidos (clave st.days: abreviaturas separadas por coma)
+    const diasSemana = () => tr('st.weekdays').split(',');
 
     // ---------- Almacenamiento ----------
     function load(key, fallback) {
@@ -84,7 +88,7 @@
         return new Date(y, m - 1, d, 12);
     }
 
-    function fmtNum(n) { return Math.round(n).toLocaleString('es-ES'); }
+    function fmtNum(n) { return Math.round(n).toLocaleString(window.I18N.locale); }
 
     function fmtDur(s) {
         s = Math.round(s);
@@ -94,11 +98,11 @@
     }
 
     function fmtDate(t) {
-        return new Date(t).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+        return new Date(t).toLocaleDateString(window.I18N.locale, { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
     function fmtShort(t) {
-        return new Date(t).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+        return new Date(t).toLocaleDateString(window.I18N.locale, { day: '2-digit', month: 'short' });
     }
 
     function avg(arr) {
@@ -250,15 +254,15 @@
                 if (dt > today) { cells += '<div class="st-cell st-cell-future"></div>'; continue; }
                 const c = counts[dayKey(dt.getTime())] || 0;
                 const lvl = c === 0 ? 0 : c <= 1 ? 1 : c <= 3 ? 2 : c <= 6 ? 3 : 4;
-                const label = `${fmtDate(dt.getTime())}: ${c} ${c === 1 ? 'partida' : 'partidas'}`;
+                const label = `${fmtDate(dt.getTime())}: ${tr('st.games', { n: c })}`;
                 cells += `<div class="st-cell st-lvl-${lvl}" title="${esc(label)}"></div>`;
             }
         }
         return `<div class="st-heat-wrap">
-            <div class="st-heat-days"><span>Lun</span><span></span><span>Mié</span><span></span><span>Vie</span><span></span><span>Dom</span></div>
+            <div class="st-heat-days">${(() => { const d = diasSemana(); return `<span>${d[0]}</span><span></span><span>${d[2]}</span><span></span><span>${d[4]}</span><span></span><span>${d[6]}</span>`; })()}</div>
             <div class="st-heat" style="--weeks:${weeks}">${cells}</div>
         </div>
-        <div class="st-heat-legend">Menos <i class="st-cell st-lvl-0"></i><i class="st-cell st-lvl-1"></i><i class="st-cell st-lvl-2"></i><i class="st-cell st-lvl-3"></i><i class="st-cell st-lvl-4"></i> Más</div>`;
+        <div class="st-heat-legend">${tr('st.less')} <i class="st-cell st-lvl-0"></i><i class="st-cell st-lvl-1"></i><i class="st-cell st-lvl-2"></i><i class="st-cell st-lvl-3"></i><i class="st-cell st-lvl-4"></i> ${tr('st.more')}</div>`;
     }
 
     // ---------- Secciones ----------
@@ -285,18 +289,18 @@
         const lifetime = Math.max(num(us.testsCompleted), done.length);
 
         // Consistencia: 100 − coeficiente de variación del WPM (últimas 20 completadas)
-        let consist = '—', consistSub = 'Necesitas 5 pruebas';
+        let consist = '—', consistSub = tr('st.need5');
         const recent = wpms.slice(-20);
         if (recent.length >= 5) {
             const m = avg(recent);
             const sd = Math.sqrt(avg(recent.map(v => (v - m) ** 2)));
             const c = m > 0 ? Math.max(0, Math.round(100 - (sd / m) * 100)) : 0;
             consist = c + '%';
-            consistSub = c >= 85 ? 'Muy estable' : c >= 70 ? 'Estable' : 'Muy variable';
+            consistSub = c >= 85 ? tr('st.veryStable') : c >= 70 ? tr('st.stable') : tr('st.variable');
         }
 
         // Tendencia: últimas N pruebas vs las N anteriores
-        let trend = '—', trendSub = 'Necesitas 4 pruebas', trendCls = '';
+        let trend = '—', trendSub = tr('st.need4'), trendCls = '';
         if (wpms.length >= 4) {
             const size = Math.min(10, Math.floor(wpms.length / 2));
             const last = avg(wpms.slice(-size));
@@ -304,38 +308,38 @@
             const diff = last - prev;
             const sign = diff > 0.5 ? '▲ +' : diff < -0.5 ? '▼ ' : '● ';
             trend = `${sign}${Math.abs(diff) < 0.5 ? '0' : diff.toFixed(1)}`;
-            trendSub = `WPM: últimas ${size} vs ${size} anteriores`;
+            trendSub = tr('st.trendSub', { n: size });
             trendCls = diff > 0.5 ? 'st-up' : diff < -0.5 ? 'st-down' : '';
         }
 
         const cards = [
-            card('🎮', 'Partidas jugadas', fmtNum(H.length), `${fmtNum(done.length)} completadas · ${fmtNum(H.length - done.length)} derrotas`),
-            card('✅', 'Pruebas completadas', fmtNum(lifetime), 'Total histórico'),
-            card('🚀', 'Mejor WPM', best ? fmtNum(best) : '—', best ? 'Récord personal' : 'Aún sin datos'),
-            card('📈', 'WPM medio', wpms.length ? fmtNum(avg(wpms)) : '—', wpms.length ? `Últimas 10: ${fmtNum(avg(wpms.slice(-10)))}` : ''),
-            card('🎯', 'Precisión media', done.length ? Math.round(avg(done.map(h => h.acc))) + '%' : '—', done.length ? `Mejor: ${Math.max(...done.map(h => h.acc))}%` : ''),
-            card('⏱️', 'Tiempo jugado', H.length ? fmtDur(H.reduce((a, h) => a + h.secs, 0)) : '—', H.length ? `Media: ${fmtDur(avg(H.map(h => h.secs)))} por partida` : ''),
-            card('⌨️', 'Caracteres escritos', fmtNum(H.reduce((a, h) => a + h.chars, 0)), `${fmtNum(H.reduce((a, h) => a + h.words, 0))} palabras aprox.`),
-            card('❌', 'Errores totales', fmtNum(H.reduce((a, h) => a + h.errors, 0)),
-                 `${(H.reduce((a, h) => a + h.errors, 0) / Math.max(1, H.reduce((a, h) => a + h.chars, 0)) * 100).toFixed(1)} por cada 100 caracteres`),
-            card('🔥', 'Mejor racha de palabras', fmtNum(num(us.maxWordStreak)), 'Sin cometer errores'),
-            card('📅', 'Racha de días', `${streaks.current}`, `Mejor racha: ${streaks.best} ${streaks.best === 1 ? 'día' : 'días'}`),
-            card('🧘', 'Consistencia', consist, consistSub),
-            card('📊', 'Tendencia', trend, trendSub, trendCls)
+            card('🎮', tr('st.cGames'), fmtNum(H.length), tr('st.cGamesSub', { ok: fmtNum(done.length), lost: fmtNum(H.length - done.length) })),
+            card('✅', tr('st.cTests'), fmtNum(lifetime), tr('st.cTestsSub')),
+            card('🚀', tr('st.cBest'), best ? fmtNum(best) : '—', best ? tr('st.cBestSub') : tr('st.noData')),
+            card('📈', tr('st.cAvg'), wpms.length ? fmtNum(avg(wpms)) : '—', wpms.length ? tr('st.cAvgSub', { n: fmtNum(avg(wpms.slice(-10))) }) : ''),
+            card('🎯', tr('st.cAcc'), done.length ? Math.round(avg(done.map(h => h.acc))) + '%' : '—', done.length ? tr('st.cAccSub', { n: Math.max(...done.map(h => h.acc)) }) : ''),
+            card('⏱️', tr('st.cTime'), H.length ? fmtDur(H.reduce((a, h) => a + h.secs, 0)) : '—', H.length ? tr('st.cTimeSub', { n: fmtDur(avg(H.map(h => h.secs))) }) : ''),
+            card('⌨️', tr('st.cChars'), fmtNum(H.reduce((a, h) => a + h.chars, 0)), tr('st.cCharsSub', { n: fmtNum(H.reduce((a, h) => a + h.words, 0)) })),
+            card('❌', tr('st.cErrors'), fmtNum(H.reduce((a, h) => a + h.errors, 0)),
+                 tr('st.cErrorsSub', { n: (H.reduce((a, h) => a + h.errors, 0) / Math.max(1, H.reduce((a, h) => a + h.chars, 0)) * 100).toFixed(1) })),
+            card('🔥', tr('st.cWordStreak'), fmtNum(num(us.maxWordStreak)), tr('st.noMistakes')),
+            card('📅', tr('st.cDayStreak'), `${streaks.current}`, tr('st.cDayStreakSub', { n: streaks.best })),
+            card('🧘', tr('st.cConsist'), consist, consistSub),
+            card('📊', tr('st.cTrend'), trend, trendSub, trendCls)
         ].join('');
 
-        return section('Resumen general', 'Tus números de siempre, de un vistazo', `<div class="st-cards">${cards}</div>`);
+        return section(tr('st.sOverview'), tr('st.sOverviewSub'), `<div class="st-cards">${cards}</div>`);
     }
 
     function secTendencia(done) {
         const last = done.slice(-CHART_POINTS);
         const tabs = `<div class="st-tabs">
             <button type="button" class="st-tab ${chartMetric === 'wpm' ? 'active' : ''}" data-st-metric="wpm">WPM</button>
-            <button type="button" class="st-tab ${chartMetric === 'acc' ? 'active' : ''}" data-st-metric="acc">Precisión</button>
+            <button type="button" class="st-tab ${chartMetric === 'acc' ? 'active' : ''}" data-st-metric="acc">${tr('ui.stat-accuracy')}</button>
         </div>`;
 
         if (last.length === 0) {
-            return section('Evolución', `Últimas ${CHART_POINTS} pruebas completadas`, tabs + '<p class="st-empty">Completa tu primera prueba para ver aquí tu progreso.</p>');
+            return section(tr('st.sTrend'), tr('st.sTrendLast', { n: CHART_POINTS }), tabs + `<p class="st-empty">${tr('st.trendEmpty')}</p>`);
         }
 
         const dates = last.map(h => fmtShort(h.t));
@@ -343,16 +347,16 @@
         if (chartMetric === 'wpm') {
             const values = last.map(h => h.wpm);
             const max = Math.max(20, Math.ceil(Math.max(...values) / 20) * 20);
-            chart = lineChart(values, dates, { id: 'wpm', min: 0, max, unit: ' WPM', label: 'Evolución del WPM' });
-            legend = `<span>Mejor: <b>${Math.max(...values)}</b></span><span>Peor: <b>${Math.min(...values)}</b></span><span>Media: <b>${Math.round(avg(values))}</b></span>`;
+            chart = lineChart(values, dates, { id: 'wpm', min: 0, max, unit: ' WPM', label: tr('st.chartWpm') });
+            legend = `<span>${tr('st.best')} <b>${Math.max(...values)}</b></span><span>${tr('st.worst')} <b>${Math.min(...values)}</b></span><span>${tr('st.mean')} <b>${Math.round(avg(values))}</b></span>`;
         } else {
             const values = last.map(h => h.acc);
             const min = Math.max(0, Math.floor((Math.min(...values) - 5) / 10) * 10);
-            chart = lineChart(values, dates, { id: 'acc', min: Math.min(min, 90), max: 100, unit: '%', label: 'Evolución de la precisión' });
-            legend = `<span>Mejor: <b>${Math.max(...values)}%</b></span><span>Peor: <b>${Math.min(...values)}%</b></span><span>Media: <b>${Math.round(avg(values))}%</b></span>`;
+            chart = lineChart(values, dates, { id: 'acc', min: Math.min(min, 90), max: 100, unit: '%', label: tr('st.chartAcc') });
+            legend = `<span>${tr('st.best')} <b>${Math.max(...values)}%</b></span><span>${tr('st.worst')} <b>${Math.min(...values)}%</b></span><span>${tr('st.mean')} <b>${Math.round(avg(values))}%</b></span>`;
         }
 
-        return section('Evolución', `Últimas ${last.length} pruebas completadas · línea punteada = media móvil`,
+        return section(tr('st.sTrend'), tr('st.sTrendSub', { n: last.length }),
             `${tabs}${chart}<div class="st-legend">${legend}</div>`);
     }
 
@@ -364,23 +368,23 @@
             const dim = g.length === 0 ? 'st-row-dim' : '';
             return `<div class="st-mode-row ${dim}">
                 <div class="st-mode-name"><span>${m.icono}</span> ${esc(m.nombre)}</div>
-                <div class="st-mode-cell" data-label="Partidas">${g.length ? fmtNum(g.length) : '—'}</div>
-                <div class="st-mode-cell st-mode-bar" data-label="Completadas">
+                <div class="st-mode-cell" data-label="${tr('st.colGames')}">${g.length ? fmtNum(g.length) : '—'}</div>
+                <div class="st-mode-cell st-mode-bar" data-label="${tr('st.colDone')}">
                     <div class="st-meter"><div class="st-meter-fill" style="width:${pct}%"></div></div>
                     <span>${g.length ? pct + '%' : '—'}</span>
                 </div>
-                <div class="st-mode-cell" data-label="Mejor WPM">${ok.length ? Math.max(...ok.map(h => h.wpm)) : '—'}</div>
-                <div class="st-mode-cell" data-label="WPM medio">${ok.length ? Math.round(avg(ok.map(h => h.wpm))) : '—'}</div>
-                <div class="st-mode-cell" data-label="Precisión">${ok.length ? Math.round(avg(ok.map(h => h.acc))) + '%' : '—'}</div>
+                <div class="st-mode-cell" data-label="${tr('st.cBest')}">${ok.length ? Math.max(...ok.map(h => h.wpm)) : '—'}</div>
+                <div class="st-mode-cell" data-label="${tr('st.cAvg')}">${ok.length ? Math.round(avg(ok.map(h => h.wpm))) : '—'}</div>
+                <div class="st-mode-cell" data-label="${tr('ui.stat-accuracy')}">${ok.length ? Math.round(avg(ok.map(h => h.acc))) + '%' : '—'}</div>
             </div>`;
         }).join('');
 
         const head = `<div class="st-mode-row st-mode-head">
-            <div class="st-mode-name">Modo</div><div class="st-mode-cell">Partidas</div><div class="st-mode-cell">Completadas</div>
-            <div class="st-mode-cell">Mejor WPM</div><div class="st-mode-cell">WPM medio</div><div class="st-mode-cell">Precisión</div>
+            <div class="st-mode-name">${tr('st.colMode')}</div><div class="st-mode-cell">${tr('st.colGames')}</div><div class="st-mode-cell">${tr('st.colDone')}</div>
+            <div class="st-mode-cell">${tr('st.cBest')}</div><div class="st-mode-cell">${tr('st.cAvg')}</div><div class="st-mode-cell">${tr('ui.stat-accuracy')}</div>
         </div>`;
 
-        return section('Rendimiento por modo', 'Cuántas partidas terminas con éxito y qué tan rápido eres en cada modo', `<div class="st-modes">${head}${rows}</div>`);
+        return section(tr('st.sModes'), tr('st.sModesSub'), `<div class="st-modes">${head}${rows}</div>`);
     }
 
     function secActividad(H) {
@@ -399,24 +403,24 @@
             const hMax = Math.max(...byHour);
             const dMax = Math.max(...byDow);
             favHour = `${pad(byHour.indexOf(hMax))}:00`;
-            favDay = DIAS_SEMANA[byDow.indexOf(dMax)];
+            favDay = diasSemana()[byDow.indexOf(dMax)];
         }
 
-        const dowChart = barChart(byDow.map((v, i) => ({ label: DIAS_SEMANA[i], value: v, title: `${DIAS_SEMANA[i]}: ${v} partidas` })));
-        const hourChart = barChart(byHour.map((v, i) => ({ label: i % 3 === 0 ? String(i) : '', value: v, title: `${pad(i)}:00 — ${v} partidas` })), { cls: 'st-bars-thin' });
+        const dowChart = barChart(byDow.map((v, i) => ({ label: diasSemana()[i], value: v, title: `${diasSemana()[i]}: ${tr('st.games', { n: v })}` })));
+        const hourChart = barChart(byHour.map((v, i) => ({ label: i % 3 === 0 ? String(i) : '', value: v, title: `${pad(i)}:00 — ${tr('st.games', { n: v })}` })), { cls: 'st-bars-thin' });
 
         const inner = `
             ${heatmap(counts)}
             <div class="st-pair">
-                <div><h4>Por día de la semana <small>Favorito: <b>${favDay}</b></small></h4>${dowChart}</div>
-                <div><h4>Por hora del día <small>Favorita: <b>${favHour}</b></small></h4>${hourChart}</div>
+                <div><h4>${tr('st.byDay')} <small>${tr('st.favDay')} <b>${favDay}</b></small></h4>${dowChart}</div>
+                <div><h4>${tr('st.byHour')} <small>${tr('st.favHour')} <b>${favHour}</b></small></h4>${hourChart}</div>
             </div>`;
-        return section('Actividad', 'Cuándo practicas (últimas 16 semanas)', inner);
+        return section(tr('st.sActivity'), tr('st.sActivitySub'), inner);
     }
 
     function secDistribucion(done) {
         if (done.length === 0) {
-            return section('Distribución de velocidad', 'Cuántas pruebas caen en cada rango de WPM', '<p class="st-empty">Sin pruebas completadas todavía.</p>');
+            return section(tr('st.sDist'), tr('st.sDistSub'), `<p class="st-empty">${tr('st.distEmpty')}</p>`);
         }
         const lo = Math.floor(Math.min(...done.map(h => h.wpm)) / 10);
         const hi = Math.floor(Math.max(...done.map(h => h.wpm)) / 10);
@@ -427,10 +431,10 @@
             const from = (lo + i) * 10;
             const last = i === buckets - 1 && hi - lo + 1 > buckets;
             const label = last ? `${from}+` : `${from}`;
-            return { label, value: v, title: `${last ? from + '+' : from + '–' + (from + 9)} WPM: ${v} pruebas` };
+            return { label, value: v, title: tr('st.distTitle', { r: last ? from + '+' : from + '–' + (from + 9), n: v }) };
         });
         const mode = (lo + counts.indexOf(Math.max(...counts))) * 10;
-        return section('Distribución de velocidad', `Tu rango más habitual: <b>${mode}–${mode + 9} WPM</b>`, barChart(items));
+        return section(tr('st.sDist'), tr('st.distCommon', { r: `<b>${mode}–${mode + 9} WPM</b>` }), barChart(items));
     }
 
     function secTeclas() {
@@ -442,7 +446,7 @@
             .slice(0, 10);
 
         if (rows.length === 0) {
-            return section('Teclas más falladas', 'Las letras que más te cuestan', '<p class="st-empty">Todavía no hay suficientes datos de teclas. Juega algunas partidas y vuelve.</p>');
+            return section(tr('st.sKeys'), tr('st.sKeysEmptySub'), `<p class="st-empty">${tr('st.keysEmpty')}</p>`);
         }
         const maxRate = Math.max(...rows.map(r => r.rate));
         const list = rows.map((r, i) => `
@@ -453,7 +457,7 @@
                 <span class="st-key-pct">${(r.rate * 100).toFixed(1)}%</span>
                 <span class="st-key-cnt">${r.err}/${fmtNum(r.total)}</span>
             </div>`).join('');
-        return section('Teclas más falladas', 'Porcentaje de veces que fallas cada tecla (mínimo 15 pulsaciones)', `<div class="st-keys">${list}</div>`);
+        return section(tr('st.sKeys'), tr('st.sKeysSub'), `<div class="st-keys">${list}</div>`);
     }
 
     function secRecords(H, done, us) {
@@ -462,39 +466,39 @@
 
         if (done.length) {
             const bw = done.reduce((a, b) => (b.wpm > a.wpm ? b : a));
-            items.push(['🏆', 'Mejor WPM', `${bw.wpm} WPM`, `${fmtDate(bw.t)} · ${NOMBRE_MODO[bw.mode]}`]);
+            items.push(['🏆', tr('st.cBest'), `${bw.wpm} WPM`, `${fmtDate(bw.t)} · ${modeName(bw.mode)}`]);
 
             const long = done.filter(h => h.words >= 20);
             const pool = long.length ? long : done;
             const ba = pool.reduce((a, b) => (b.acc > a.acc || (b.acc === a.acc && b.wpm > a.wpm)) ? b : a);
-            items.push(['🎯', long.length ? 'Mejor precisión (≥ 20 palabras)' : 'Mejor precisión', `${ba.acc}%`, `${fmtDate(ba.t)} · ${ba.wpm} WPM`]);
+            items.push(['🎯', long.length ? tr('st.rAccLong') : tr('st.rAcc'), `${ba.acc}%`, `${fmtDate(ba.t)} · ${ba.wpm} WPM`]);
 
             const bl = done.reduce((a, b) => (b.words > a.words ? b : a));
-            items.push(['📝', 'Texto más largo', `${fmtNum(bl.words)} palabras`, `${fmtDate(bl.t)}`]);
+            items.push(['📝', tr('st.rLongestText'), tr('st.words', { n: bl.words, f: fmtNum(bl.words) }), `${fmtDate(bl.t)}`]);
 
             const bt = H.reduce((a, b) => (b.secs > a.secs ? b : a));
-            items.push(['⏱️', 'Partida más larga', fmtDur(bt.secs), `${fmtDate(bt.t)}`]);
+            items.push(['⏱️', tr('st.rLongestGame'), fmtDur(bt.secs), `${fmtDate(bt.t)}`]);
         }
 
-        items.push(['🔥', 'Mejor racha de palabras', fmtNum(num(us.maxWordStreak)), 'Sin cometer errores']);
-        items.push(['📅', 'Mejor racha de días', `${streaks.best} ${streaks.best === 1 ? 'día' : 'días'}`, `Actual: ${streaks.current}`]);
+        items.push(['🔥', tr('st.cWordStreak'), fmtNum(num(us.maxWordStreak)), tr('st.noMistakes')]);
+        items.push(['📅', tr('st.rBestDays'), tr('st.days', { n: streaks.best }), tr('st.current', { n: streaks.current })]);
 
         if (H.length) {
             let best = 0, run = 0;
             H.forEach(h => { run = h.result === 'ok' ? run + 1 : 0; best = Math.max(best, run); });
-            items.push(['✅', 'Pruebas seguidas sin perder', fmtNum(best), 'Mejor racha de victorias']);
+            items.push(['✅', tr('st.rWinStreak'), fmtNum(best), tr('st.rWinStreakSub')]);
 
             const perDay = {};
             H.forEach(h => { perDay[dayKey(h.t)] = (perDay[dayKey(h.t)] || 0) + 1; });
             const topDay = Object.keys(perDay).reduce((a, b) => perDay[b] > perDay[a] ? b : a);
-            items.push(['🗓️', 'Día más activo', `${perDay[topDay]} partidas`, fmtDate(parseDay(topDay).getTime())]);
+            items.push(['🗓️', tr('st.rTopDay'), tr('st.games', { n: perDay[topDay] }), fmtDate(parseDay(topDay).getTime())]);
         }
 
         const html = items.map(i => `<div class="st-record">
             <span class="st-record-icon">${i[0]}</span>
             <div><span class="st-record-label">${esc(i[1])}</span><span class="st-record-value">${esc(i[2])}</span><span class="st-record-sub">${esc(i[3])}</span></div>
         </div>`).join('');
-        return section('Récords personales', 'Tus mejores marcas', `<div class="st-records">${html}</div>`);
+        return section(tr('st.sRecords'), tr('st.sRecordsSub'), `<div class="st-records">${html}</div>`);
     }
 
     function secLogros() {
@@ -507,18 +511,18 @@
             const done = items.filter(a => a.completado).length;
             const pct = Math.round(done / items.length * 100);
             return `<div class="st-ach-row">
-                <span class="st-ach-name">${nombre}</span>
+                <span class="st-ach-name">${tr(nombre)}</span>
                 <div class="st-meter"><div class="st-meter-fill" style="width:${pct}%"></div></div>
                 <span class="st-ach-count">${done}/${items.length}</span>
             </div>`;
         }).join('');
-        return section('Progreso de logros', `${total} de ${list.length} desbloqueados (${Math.round(total / list.length * 100)}%)`, `<div class="st-ach">${rows}</div>`);
+        return section(tr('st.sAch'), tr('st.sAchSub', { a: total, b: list.length, p: Math.round(total / list.length * 100) }), `<div class="st-ach">${rows}</div>`);
     }
 
     function secFooter(H) {
         return `<div class="st-footer">
-            <p>${H.length ? `Se guardan tus últimas ${MAX_HISTORY} partidas en este navegador.` : 'Las estadísticas se guardan en este navegador.'}</p>
-            <button type="button" class="st-reset" id="stats-reset" ${H.length ? '' : 'disabled'}>Borrar historial de partidas</button>
+            <p>${H.length ? tr('st.footSaved', { n: MAX_HISTORY }) : tr('st.footSavedEmpty')}</p>
+            <button type="button" class="st-reset" id="stats-reset" ${H.length ? '' : 'disabled'}>${tr('st.reset')}</button>
         </div>`;
     }
 
@@ -533,7 +537,7 @@
 
         let intro = '';
         if (H.length === 0) {
-            intro = `<div class="st-intro">📊 Aún no hay partidas en el historial. Cada prueba que juegues desde ahora se registrará aquí con sus gráficas y récords.</div>`;
+            intro = `<div class="st-intro">📊 ${tr('st.intro')}</div>`;
         }
 
         body.innerHTML = intro +
@@ -570,7 +574,7 @@
 
     function resetHistory() {
         if (!history.length) return;
-        if (!window.confirm('¿Borrar todo el historial de partidas y las estadísticas de teclas?\n\nTus logros NO se borran.')) return;
+        if (!window.confirm(tr('st.confirmReset'))) return;
         history = [];
         keyStats = {};
         days = [];
@@ -605,6 +609,7 @@
         close,
         dayStreaks,
         setAchievementsProvider: (fn) => { achievementsProvider = fn; },
+        refreshLanguage: () => { if (isOpen()) render(); },
         getHistory: () => history.slice()
     };
 })();

@@ -1,3 +1,4 @@
+// Textos de práctica en español (ES). Las categorías son las mismas que en texts-en.js
 const typingTexts = {
     short: [
         "El veloz murciélago hindú comía feliz cardillo y kiwi. Después se marchó volando hacia la montaña más cercana.",
@@ -24,34 +25,42 @@ const typingTexts = {
         "Las olas rompían con fuerza contra las rocas del acantilado. El sonido del mar se escuchaba desde muy lejos.",
         "El anciano miraba el horizonte recordando su juventud. Una lágrima discreta recorrió su rostro curtido por el sol.",
         "La ciudad nunca duerme, siempre hay luces y ruido. Sus calles laten con una energía que no descansa jamás.",
-        "El perro movía la cola feliz al ver a su dueño. Saltaba de alegría esperando su paseo de la tarde."
+        "El perro movía la cola feliz al ver a su dueño. Saltaba de alegría esperando su paseo de la tarde.",
+        "Cada mañana el niño sonríe y comparte su desayuno con el pequeño gato del vecino. Así empieza un buen día en la montaña.",
+        "Mi abuela me enseñó que el cariño se demuestra con pequeños gestos: un pañuelo bordado, una sonrisa y un café caliente.",
+        "Sueña en grande, mañana es otro día. Con un poco de compañía y mucho cariño, cada pequeño paso se convierte en una hazaña.",
+        "En otoño la niña recoge piñas y leña junto a la cabaña. Luego regresa con las uñas manchadas de resina y una sonrisa."
     ],
     noaccent: [
-        "El camino hacia la cumbre de la montana era empinado y cubierto de piedras sueltas. Los senderistas caminaban despacio para conservar energia mientras contemplaban el inmenso valle verde que se abria bajo sus pies en aquella hermosa tarde.",
+        "El camino hacia la cumbre de la montaña era empinado y cubierto de piedras sueltas. Los senderistas caminaban despacio para conservar energia mientras contemplaban el inmenso valle verde que se abria bajo sus pies en aquella hermosa tarde.",
         "Durante el verano las tardes se alargan y el sol calienta los campos de trigo. Los campesinos recogen la cosecha con paciencia antes de que caiga la noche y refresque el ambiente en toda la comarca.",
         "El gato blanco dormia tranquilo sobre la ventana mientras miraba caer las hojas doradas en el parque. De vez en cuando levantaba la cabeza para seguir el vuelo de las mariposas que bailaban entre los arbustos del patio.",
         "Navegar por el ancho mar abierto requiere concentracion, destreza y buen viento en las velas. Los marineros observan las estrellas nocturnas para mantener el rumbo fijado hacia el puerto lejano sin perder la calma.",
         "En lo profundo del bosque los arroyos de agua fresca corren entre piedras musgosas y troncos caidos. El sonido constante de la corriente invita a la reflexion y al descanso lejos del ruido de las grandes ciudades.",
         "La musica instrumental llenaba cada rincon de la vieja sala de madera. Los asistentes escuchaban en absoluto silencio como las notas del piano se mezclaban con el suave viento que soplaba tras los ventanales.",
         "Un buen libro puede transportar tu mente hacia mundos remotos y tiempos olvidados. Con solo abrir sus paginas es posible viajar entre galaxias lejanas, explorar selvas desconocidas o comprender los secretos del universo.",
-        "La pequena ardilla saltaba con agilidad de rama en rama buscando bellotas para el invierno. Guardaba su tesoro en el hueco de un tronco seco mientras vigilaba atenta que ningun intruso descubriera su escondite secreto.",
+        "La pequeña ardilla saltaba con agilidad de rama en rama buscando bellotas para el invierno. Guardaba su tesoro en el hueco de un tronco seco mientras vigilaba atenta que ningun intruso descubriera su escondite secreto.",
         "El reloj antiguo de la torre marcaba las horas con campanadas graves que resonaban por todo el pueblo. La gente continuaba sus tareas diarias sabiendo que pronto llegaria el momento de volver a sus hogares.",
         "Pintar un cuadro requiere paciencia, dedicacion y una mirada atenta a los detalles de la luz. Cada pincelada sobre el lienzo aporta texturas y matices que dan vida a un paisaje que solo existia en la imaginacion.",
         "Cuando la tormenta comenzo a disiparse, el cielo mostro tonos violetas y dorados sobre el horizonte. El aroma a tierra mojada lleno las calles y la gente salio a sus balcones para respirar el aire fresco.",
         "El explorador reviso su mapa de papel gastado y comparo los senderos marcados con el relieve de las colinas. Sabia que antes del anochecer debia encontrar un buen sitio junto al rio para armar su campamento.",
         "Los dias frios de invierno invitan a tomar una taza de te caliente junto al fuego encendido. Es el momento perfecto para conversar en familia, compartir historias antiguas y disfrutar de la calidez del hogar.",
         "El tren cruzaba veloces puentes de hierro y praderas inmensas mientras los pasajeros contemplaban el paisaje. El traqueteo suave de las ruedas sobre las vias creaba un ritmo constante que adormecia a los viajeros.",
-        "Aprender a tocar un instrumento musical ensena disciplina y despierta la creatividad de las personas. Cada nota practicada con constancia abre las puertas a una forma unica de expresar emociones profundas sin usar palabras.",
-        "Las aves migratorias viajan miles de kilometros cada ano siguiendo rutas ancestrales marcadas en su memoria. Vuelan en formacion ordenada atravesando montanas y costas hasta encontrar tierras con climas mas favorables.",
+        "Aprender a tocar un instrumento musical enseña disciplina y despierta la creatividad de las personas. Cada nota practicada con constancia abre las puertas a una forma unica de expresar emociones profundas sin usar palabras.",
+        "Las aves migratorias viajan miles de kilometros cada año siguiendo rutas ancestrales marcadas en su memoria. Vuelan en formacion ordenada atravesando montañas y costas hasta encontrar tierras con climas mas favorables.",
         "La biblioteca municipal guardaba miles de manuscritos sobre estantes altos de madera oscura. El olor a papel viejo y el silencio solemne convertian aquel recinto en un refugio ideal para estudiantes e investigadores.",
         "Caminar temprano por la orilla de la playa permite escuchar el rumor tranquilo de las olas rompiendo en la arena. La brisa marina renueva las energias y despeja los pensamientos al comenzar una nueva jornada.",
         "El jardin botanico albergaba especies exoticas de plantas traidas desde los rincones mas remotos del planeta. Entre flores de colores vivos y hojas gigantescas, los visitantes podian descubrir la maravillosa variedad de la naturaleza.",
-        "La astronomia nos recuerda lo pequenos que somos dentro de la inmensidad del cosmos. Al observar las estrellas lejanas a traves de un telescopio, comprendemos que cada punto de luz representa un misterio por descubrir.",
+        "La astronomia nos recuerda lo pequeños que somos dentro de la inmensidad del cosmos. Al observar las estrellas lejanas a traves de un telescopio, comprendemos que cada punto de luz representa un misterio por descubrir.",
         "El carpintero trabajaba la madera con esmero utilizando herramientas tradicionales heredadas de su abuelo. Cada mueble que salia de su taller era una pieza unica hecha para durar muchas generaciones.",
         "El arte de la cocina combina aromas, tecnicas y tradiciones que unen a las culturas de todo el mundo. Preparar una buena comida para amigos y seres queridos es una de las formas mas sencillas de compartir felicidad.",
-        "Los valles verdes rodeados de altas montanas ofrecen vistas espectaculares al amanecer. Cuando los primeros rayos de luz tocan la niebla matutina, el paisaje parece salido de un cuento fantastico.",
+        "Los valles verdes rodeados de altas montañas ofrecen vistas espectaculares al amanecer. Cuando los primeros rayos de luz tocan la niebla matutina, el paisaje parece salido de un cuento fantastico.",
         "La constancia y el esfuerzo diario son la clave para dominar cualquier destreza en la vida. Quien practica con paciencia y no se rinde ante los primeros fallos siempre alcanza resultados que superan sus propias expectativas.",
-        "El faro solitario iluminaba las aguas oscuras para guiar a las embarcaciones perdidas en la noche. Su luz giratoria era un simbolo de esperanza y seguridad para todos los marineros que regresaban a casa."
+        "El faro solitario iluminaba las aguas oscuras para guiar a las embarcaciones perdidas en la noche. Su luz giratoria era un simbolo de esperanza y seguridad para todos los marineros que regresaban a casa.",
+        "El otoño llega a la montaña con un manto de hojas doradas. El niño y su compañero recogen leña junto a la cabaña mientras una araña teje su tela y el humo de la chimenea sube sereno hacia el cielo limpio.",
+        "Cada mañana la niña riega las plantas del patio con una pequeña regadera. Su compañero, un viejo gato, la mira con cariño y ronronea bajo el sol. Ese sueño sencillo de paz le llena el año entero de alegria.",
+        "Un señor español paseaba por la montaña con su pañuelo al cuello. Se detuvo a mirar un zorro que corre entre la caña brava, mientras recordaba los cuentos de su niñez y el cariño de su abuela.",
+        "Los vecinos organizaron una campaña para limpiar la playa. Los niños llevaban bolsas y guantes mientras las niñas separaban latas y botellas. Al caer la tarde todos compartieron pan, fruta y risas bajo el cielo naranja."
     ],
     learn: [
         "Petricor: Es el peculiar y agradable aroma que desprende la tierra seca cuando comienza a llover sobre ella. El término proviene del griego 'pétra' (piedra) e 'ikhôr' (el fluido etéreo que corría por las venas de los dioses en la mitología griega).",
@@ -83,7 +92,10 @@ const typingTexts = {
         "Dato cultural: La mítica Biblioteca de Alejandría, fundada en el siglo tercero antes de nuestra era en Egipto, llegó a albergar más de medio millón de papiros. Cualquier navío mercante que atracaba en la ciudad debía prestar sus manuscritos para que fueran copiados.",
         "Dato curioso: La luz solar que acaricia nuestra piel durante el día emprendió su viaje desde el núcleo del Sol hace miles de años, pero solo necesitó ocho minutos y veinte segundos para recorrer los ciento cincuenta millones de kilómetros que nos separan del astro.",
         "Dato curioso: Los cuervos poseen una memoria facial prodigiosa y son capaces de recordar rostros humanos concretos durante más de un lustro, advirtiendo a las siguientes generaciones de su bandada sobre personas hostiles o amigables.",
-        "Dato cultural: El concepto y símbolo matemático del cero como cifra posicional fue concebido de manera independiente por los sabios de la civilización maya en Mesoamérica y por los matemáticos del subcontinente indio antes de llegar a Europa."
+        "Dato cultural: El concepto y símbolo matemático del cero como cifra posicional fue concebido de manera independiente por los sabios de la civilización maya en Mesoamérica y por los matemáticos del subcontinente indio antes de llegar a Europa.",
+        "Añoranza: sentimiento de pena por la ausencia, privación o pérdida de alguien o algo querido. Deriva del verbo añorar, y se usa mucho en español para hablar de la patria, la infancia o los lugares dejados atrás.",
+        "Ensoñación: acción de soñar despierto, imaginando cosas bellas o deseadas que no son reales. Es un sustantivo de la misma familia que sueño y soñar, y suele aparecer en la literatura para describir un estado entre la vigilia y el sueño.",
+        "Acuñar: grabar monedas o medallas con un troquel; también significa crear y dar difusión a una expresión nueva, como cuando se dice que alguien acuñó un término. Viene de cuño, el troquel con que se marca la moneda."
     ],
     philosophy: [
         "Sócrates afirmaba que una vida sin examen no merece la pena ser vivida. Para el sabio ateniense, el conocimiento de uno mismo era el punto de partida indispensable para alcanzar la auténtica virtud y la sabiduría moral.",
@@ -110,7 +122,10 @@ const typingTexts = {
         "Gottfried Leibniz planteó la gran pregunta metafísica: ¿por qué existe algo en lugar de nada? La búsqueda de una razón suficiente para todo cuanto acontece sigue desafiando a los pensadores modernos.",
         "Epicuro afirmaba que la felicidad no consiste en la acumulación de bienes materiales ni en placeres efímeros, sino en la ausencia de dolor corporal, la tranquilidad del espíritu y el disfrute de la buena amistad.",
         "Søren Kierkegaard consideraba que la angustia es el vértigo de la libertad. Al situarnos ante infinitas posibilidades de elección, experimentamos la inmensa responsabilidad de definir quiénes somos en cada instante.",
-        "Zitkala-Sa nos enseñó que la verdadera sabiduría nace de la profunda conexión con la tierra, el respeto por todos los seres vivos y la preservación de la memoria histórica de los pueblos originarios."
+        "Zitkala-Sa nos enseñó que la verdadera sabiduría nace de la profunda conexión con la tierra, el respeto por todos los seres vivos y la preservación de la memoria histórica de los pueblos originarios.",
+        "Unamuno, pensador español, sostenía que la filosofía nace de la vida y no solo de la razón. Para él, el hombre de carne y hueso, con su angustia y su anhelo de no morir, es el punto de partida de toda enseñanza y de todo pensamiento.",
+        "Ortega y Gasset, pensador de España, resumió su idea de la existencia en la frase «yo soy yo y mi circunstancia». Enseñó que cada persona se forma con el entorno que la rodea, y que comprender al hombre exige mirar su mundo y su tiempo.",
+        "Descartes, desconfiado de lo aprendido en su niñez, decidió dudar de todo hasta hallar una certeza firme. La encontró en el acto mismo de pensar: «pienso, luego existo». Esa pequeña verdad fue el cimiento de la filosofía moderna."
     ],
     romance: [
         "¿Qué es poesía?, dices mientras clavas en mi pupila tu pupila azul. ¿Qué es poesía? ¿Y tú me lo preguntas? Poesía... eres tú. En tus ojos descubro el universo y en tu voz la calma que mi corazón buscaba.",
@@ -137,7 +152,10 @@ const typingTexts = {
         "No prometo un camino sin tormentas, pero sí prometo sostener tu mano con firmeza en cada una de ellas, compartiendo mi abrigo y recordándote siempre lo profundamente que te amo.",
         "Tu nombre es la palabra más dulce que pronuncian mis labios. Basta con escucharla para que mi día se transforme y una calma infinita inunde cada rincón de mi pecho.",
         "El amor verdadero no exige cadenas ni sacrificios amargos; es un vuelo compartido donde dos almas libres eligen recorrer el mismo horizonte con respeto, ternura y complicidad.",
-        "Si volviera a nacer mil veces, en cada una de esas vidas buscaría tus pasos para volver a encontrarte, porque amarte ha sido la aventura más hermosa y plena de mi existencia."
+        "Si volviera a nacer mil veces, en cada una de esas vidas buscaría tus pasos para volver a encontrarte, porque amarte ha sido la aventura más hermosa y plena de mi existencia.",
+        "Contigo el otoño se vuelve un sueño tibio y el mundo entero cabe en un pañuelo. Cada mañana me despierta tu cariño, y la vida, pequeña y extraña, se hace enorme a tu lado.",
+        "Te guardo en cada rincón del alma, como se guarda un puñado de estrellas. Si la distancia me daña, cierro los ojos y te sueño, y tu compañía me abriga como una manta en la montaña.",
+        "Eres la niña que mi sueño dibujó en las noches de otoño. Hoy te miro, y el cariño me sube como una ola a la garganta: contigo cada año es un regalo y cada mañana, una promesa."
     ],
     sayings: [
         "A quien madruga, Dios le ayuda. La constancia y el esfuerzo desde las primeras horas del día siempre rinden frutos generosos y abren puertas que la pereza mantiene cerradas.",
@@ -164,7 +182,11 @@ const typingTexts = {
         "Por la boca muere el pez. Quien habla sin discreción o revela secretos comprometedores suele ser víctima de sus propias palabras cuando estas se vuelven en su contra.",
         "Quien siembra vientos, cosecha tempestades. Aquel que fomenta la discordia, el rencor o las malas acciones inevitablemente recibirá consecuencias mucho más graves y destructivas.",
         "Zapatero a tus zapatos. Consejo que sugiere a cada persona ocuparse y opinar únicamente de aquellos temas, oficios y disciplinas que domina y conoce verdaderamente a fondo.",
-        "No por mucho madrugar amanece más temprano. Por más que nos apresuremos con impaciencia, los procesos naturales y los grandes logros requieren su debido tiempo para madurar."
+        "No por mucho madrugar amanece más temprano. Por más que nos apresuremos con impaciencia, los procesos naturales y los grandes logros requieren su debido tiempo para madurar.",
+        "Año nuevo, vida nueva. Cada enero trae la ilusión de empezar de cero: es la oportunidad de cambiar lo que no nos gusta y de cumplir los sueños que dejamos pendientes el año anterior.",
+        "A caballo regalado no se le mira el diente. Quiere decir que no debemos criticar un obsequio, por pequeño que sea; agradecer el cariño de quien nos regala algo vale más que fijarse en sus defectos.",
+        "Al mal tiempo, buena cara. Ante la adversidad conviene mantener el ánimo: un gesto amable nos da fuerza, y con la compañía de los buenos amigos, hasta un año difícil se hace más llevadero.",
+        "Más vale pájaro en mano que ciento volando. Enseña que es mejor conservar lo seguro que perderlo por perseguir sueños dudosos; sin embargo, soñar con prudencia nunca daña a nadie."
     ],
     classic: [
         "En un lugar de la Mancha, de cuyo nombre no quiero acordarme, no ha mucho tiempo que vivía un hidalgo de los de lanza en astillero, adarga antigua, rocín flaco y galgo corredor.",
@@ -191,7 +213,10 @@ const typingTexts = {
         "El hombre que amaba a los perros, no podía soportar la idea de que alguien, en algún lugar del mundo, estuviera maltratando a un animal indefenso.",
         "La fiesta del Chivo, había comenzado. Trujillo, el Benefactor, se paseaba por el palacio con la seguridad de un dios en la tierra, ajeno a la conspiración que se tejía en las sombras.",
         "Memoria de mis putas tristes. El año de mis noventa años quise regalarme una noche de amor loco con una adolescente virgen. Me acordé de Rosa Cabarcas.",
-        "Platero es pequeño, peludo, suave; tan blando por fuera, que se diría todo de algodón, que no lleva huesos. Sólo los espejos de azabache de sus ojos son duros cual dos escarabajos de cristal negro."
+        "Platero es pequeño, peludo, suave; tan blando por fuera, que se diría todo de algodón, que no lleva huesos. Sólo los espejos de azabache de sus ojos son duros cual dos escarabajos de cristal negro.",
+        "Una liebre presumida se burló de la lenta tortuga y la retó a una carrera. Confiada, se echó a dormir la siesta; la tortuga, con paso pequeño pero firme, siguió sin parar y ganó, enseñando que la constancia vence a la soberbia.",
+        "Un patito era rechazado por su aspecto extraño y por su tamaño. Tras un duro otoño e invierno de soledad, vio su reflejo en el agua: ya no era un patito feo, sino un hermoso cisne.",
+        "Caperucita Roja llevaba una cesta a su abuela por el bosque cuando un lobo la engañó con falsas palabras. Gracias a un leñador, la niña y su abuela se salvaron, y aprendió a no fiarse de extraños."
     ],
     long: [
         "La inteligencia artificial es un campo de la informática que se enfoca en la creación de sistemas capaces de realizar tareas que normalmente requieren de la inteligencia humana, como el reconocimiento de voz, la toma de decisiones y la traducción de idiomas. A medida que avanza la tecnología, la inteligencia artificial se integra cada vez más en nuestra vida cotidiana, desde asistentes virtuales hasta vehículos autónomos, transformando así la manera en que interactuamos con el mundo y planteando nuevos retos y oportunidades para el futuro de la humanidad. El impacto ético y social de estas tecnologías apenas comienza a comprenderse a fondo.",
@@ -218,6 +243,9 @@ const typingTexts = {
         "La psicología, el estudio científico de la mente y el comportamiento humano, busca comprender cómo pensamos, sentimos y actuamos. Abarca una amplia gama de temas, desde los procesos cognitivos básicos como la percepción y la memoria hasta fenómenos complejos como el desarrollo de la personalidad, las interacciones sociales y los trastornos mentales. Al aplicar métodos científicos para investigar estos temas, los psicólogos desarrollan intervenciones para mejorar la salud mental, optimizar el rendimiento educativo y laboral, y resolver problemas sociales, contribuyendo significativamente a la mejora de la calidad de vida.",
         "El ciclo del agua, también conocido como ciclo hidrológico, es el proceso continuo por el cual el agua se mueve por la Tierra, la atmósfera y los océanos. Impulsado por la energía solar, el agua se evapora de las superficies acuáticas y terrestres, se condensa en las nubes y vuelve a caer a la Tierra en forma de precipitación. Este ciclo es fundamental para mantener la vida en nuestro planeta, ya que redistribuye el agua dulce, moldea el paisaje a través de la erosión y desempeña un papel clave en la regulación del clima global.",
         "La democracia, un sistema de gobierno en el que el poder es ejercido por el pueblo, ha evolucionado a lo largo de los siglos desde sus orígenes en la antigua Atenas. En las democracias modernas, este poder se ejerce a través de representantes electos y está respaldado por principios como la igualdad ante la ley, la libertad de expresión y la protección de los derechos humanos. Aunque la democracia enfrenta desafíos constantes, como la polarización política y la desinformación, sigue siendo el sistema de gobierno más efectivo para garantizar la libertad y el progreso social.",
-        "El arte abstracto, que emergió a principios del siglo XX, rompió con la tradición de representar el mundo visual de manera realista. En lugar de ello, artistas como Wassily Kandinsky y Piet Mondrian utilizaron el color, la forma y la línea para crear composiciones que operan de manera independiente a las referencias visuales del mundo físico. El arte abstracto busca evocar emociones, expresar ideas abstractas o explorar las cualidades formales del propio medio artístico, desafiando a los espectadores a encontrar su propio significado en la obra."
+        "El arte abstracto, que emergió a principios del siglo XX, rompió con la tradición de representar el mundo visual de manera realista. En lugar de ello, artistas como Wassily Kandinsky y Piet Mondrian utilizaron el color, la forma y la línea para crear composiciones que operan de manera independiente a las referencias visuales del mundo físico. El arte abstracto busca evocar emociones, expresar ideas abstractas o explorar las cualidades formales del propio medio artístico, desafiando a los espectadores a encontrar su propio significado en la obra.",
+        "Las montañas se forman cuando las placas tectónicas, enormes bloques de la corteza terrestre, chocan lentamente entre sí. Durante millones de años, la presión pliega y eleva las rocas hasta crear cordilleras como los Andes o el Himalaya. Después, el viento, la lluvia y el hielo las desgastan poco a poco, de modo que cada año pierden una pequeña parte de su altura. Por eso las montañas más antiguas, como los Apalaches, son más bajas y redondeadas que las jóvenes, que todavía muestran picos afilados y paredes escarpadas.",
+        "En otoño, muchos árboles de hoja caduca cambian de color antes de perder sus hojas. Durante el verano domina la clorofila, el pigmento verde que capta la luz del sol. Cuando los días se acortan y bajan las temperaturas, el árbol deja de producirla y reabsorbe parte de sus nutrientes. Entonces se hacen visibles otros pigmentos, como los carotenoides, amarillos y anaranjados. Los tonos rojizos se deben a las antocianinas, que se forman en esa época. Así, cada año, el otoño pinta los bosques con una paleta que nunca se repite igual.",
+        "Las arañas tejen telas con seda que producen en glándulas especiales de su abdomen. Esta seda, notablemente resistente en relación con su grosor, sale por unas pequeñas estructuras llamadas hileras. No todas las arañas fabrican redes para cazar: algunas acechan a sus presas o las atrapan de un salto. Las que tejen, sin embargo, reparan o renuevan su tela con frecuencia, a veces cada día. El diseño de la telaraña, ligero y flexible, ha inspirado a científicos e ingenieros que investigan materiales nuevos."
     ]
 };

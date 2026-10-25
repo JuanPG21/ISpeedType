@@ -9,7 +9,7 @@
 ![CSS3](https://img.shields.io/badge/CSS3-1572b6?logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-f7df1e?logo=javascript&logoColor=black)
 
-**[▶ Jugar ahora](https://holman2chila-droid.github.io/ISpeedType/)**
+**[▶ Jugar ahora](https://holman2chila-droid.github.io/ISpeedType/)** · **[▶ Play in English](https://holman2chila-droid.github.io/ISpeedType/?lang=en)** · [Read in English](README.en.md)
 
 ![Vista previa de ISpeedType](assets/preview.png)
 
@@ -24,6 +24,7 @@
 - **Modo Aprendizaje** para aprender a colocar los dedos desde cero, en 6 niveles progresivos con teclado y manos guía.
 - **53 logros** repartidos en 6 categorías, con escalones graduales de dificultad.
 - **Panel de Estadísticas** con historial, gráficas, récords y tus teclas más falladas.
+- **Bilingüe: Español e Inglés** 🌎 con un selector accesible (ES / EN) en la cabecera. Cada idioma tiene sus propios textos de práctica, y en inglés la categoría «Sin tildes» pasa a ser «No apostrophes» (sin apóstrofos).
 - **5 temas visuales**: oscuro, claro, violeta, rosa y verde.
 - **Sin instalación ni servidores**: todo corre en tu navegador y tus datos se guardan en tu equipo.
 - **Responsive**: funciona en escritorio y móvil.
@@ -39,7 +40,7 @@
 | 🔒 **Punto Muerto** | Algunas teclas se "rompen" y debes saltarlas con `[Espacio]`. De 2 a 5 teclas rotas. |
 | 🎓 **Aprendizaje** | Curso guiado de mecanografía desde cero, con 6 niveles. |
 
-También puedes **pegar tu propio texto** o elegir una categoría (corto, sin tildes, filosofía, romance, dichos y refranes, cuento clásico, largo...).
+También puedes **pegar tu propio texto** o elegir una categoría (corto, sin tildes / sin apóstrofos en inglés, filosofía, romance, dichos y refranes, cuento clásico, largo...).
 
 ## 🏆 Logros
 
@@ -90,12 +91,18 @@ ISpeedType/
 ├── styles.css      # Estilos, temas y animaciones
 ├── app.js          # Lógica del juego, modos, logros y navegación
 ├── stats.js        # Historial y panel de Estadísticas
-├── texts.js        # Banco de textos de práctica
+├── texts.js        # Banco de textos de práctica en español
+├── texts-en.js     # Banco de textos de práctica en inglés (originales)
+├── i18n/           # Traducciones: i18n.js (motor), es.js y en.js (diccionarios)
 ├── favicon.svg     # Icono de la pestaña
 ├── assets/         # Imagen de vista previa para redes sociales
 ├── sitemap.xml     # Mapa del sitio para buscadores
 └── LICENSE         # Licencia MIT
 ```
+
+## 🌐 Idiomas
+
+El idioma se elige con el selector **ES / EN** de la cabecera (se recuerda entre visitas) o con `?lang=en` en la URL. Para añadir o corregir una traducción edita `i18n/es.js` y `i18n/en.js` (las claves deben coincidir); los textos de práctica están en `texts.js` y `texts-en.js`.
 
 ## 🤝 Contribuir
 
