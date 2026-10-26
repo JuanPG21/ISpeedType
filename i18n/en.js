@@ -136,6 +136,8 @@
     "ui.achievements-subtitle": "Progress and typing challenges",
     "attr.achievements-close": "Close window",
     "ui.achievements-progress-label": "Total Progress",
+    "ui.achievements-reset": "Reset achievements",
+    "ach.confirmReset": "Reset all achievements and the progress tied to them (completed tests and best streak)?\n\nYour game history will NOT be deleted.",
     "ui.cat-all": "All",
     "ui.cat-streaks": "🔥 Streaks",
     "ui.cat-speed": "⚡ Speed",
