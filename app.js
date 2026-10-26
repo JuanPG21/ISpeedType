@@ -2783,6 +2783,10 @@
 
         // Lobby (setup) = scroll normal. Cualquier otra pantalla = modo juego.
         activarModoJuego(name !== 'setup', nombreModoActual());
+
+        // Temas inmersivos: avisan de qué pantalla se muestra ('setup' | 'typing' | 'results' | 'tutor').
+        const T = window.ImmersiveThemes;
+        if (T && T.active) T.emit('section', name);
     }
 
     // ===== Cambio de idioma: re-traducir lo que se genera desde JS =====

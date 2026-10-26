@@ -184,6 +184,18 @@
     function activate(id, silent) {
         const def = themes[id];
         if (!def || !unlocked || api.active === id) return;
+        // Algunos temas piden confirmación antes (p. ej. una advertencia). Solo cuando el usuario
+        // los elige a mano: al restaurar el tema guardado al cargar la página no se vuelve a preguntar.
+        if (!silent && def.beforeActivate) {
+            def.beforeActivate(() => { if (api.active !== id) doActivate(id, false); });
+            return;
+        }
+        doActivate(id, silent);
+    }
+
+    function doActivate(id, silent) {
+        const def = themes[id];
+        if (!def || !unlocked || api.active === id) return;
         if (api.active) deactivate();
 
         loadFont(def);

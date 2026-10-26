@@ -59,6 +59,12 @@
     box-shadow: inset 0 0 0 2px #000;
 }
 
+.swatch-deepweb {
+    background:
+        radial-gradient(circle at 38% 42%, #b3261e 0 12%, #4a0d09 32%, #030303 70%);
+    box-shadow: inset 0 0 0 1px #4a0d09;
+}
+
 /* Botón de sonido (solo se muestra cuando hay temas inmersivos) */
 .immersive-sound {
     display: flex;
