@@ -1,0 +1,818 @@
+/* ===================================================
+   ISpeedType — Tema inmersivo: DEEP WEB (computadora poseída)
+   Todo va dentro de body.theme-deepweb: sin la clase, esto no afecta a nada.
+   (Los efectos .dw-* los crea themes/deepweb.js solo mientras el tema está activo.)
+
+   Reglas de rendimiento (ver notas en styles.css):
+     - nada de text-shadow ni animaciones por letra en el texto principal;
+     - la linterna es UNA capa fija con un degradado radial; solo cambian
+       3 variables (--dw-x, --dw-y, --dw-r);
+     - grano, banda de tracking, destellos y rostros animan solo transform / opacity.
+
+   Seguridad (fotosensibilidad): los destellos de pantalla completa y los rostros solo
+   existen en el "modo con sustos" que el usuario elige tras una advertencia. Cada uno
+   es un único destello y entre dos hay al menos 1 segundo (nunca más de 3 por segundo).
+   En "modo suave" solo hay una sacudida leve y un pulso rojo tenue; con
+   prefers-reduced-motion no hay destellos, rostros ni sacudidas.
+   =================================================== */
+
+/* Variables animables de la linterna (posición y radio) */
+@property --dw-x {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 50vw;
+}
+
+@property --dw-y {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 40vh;
+}
+
+@property --dw-r {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 220px;
+}
+
+body.theme-deepweb {
+    --dw-bone: #cfc8b6;
+    --dw-rust: #9a2018;
+    --dw-blood: #b3261e;
+    --dw-dried: #6f1510;
+    --dw-ink: #030303;
+
+    /* Variables globales de la app, redefinidas */
+    --bg-primary: #030303;
+    --bg-secondary: #080505;
+    --bg-card: rgba(9, 5, 5, 0.9);
+    --bg-card-hover: rgba(16, 8, 8, 0.94);
+    --bg-input: #060404;
+
+    --text-primary: #cfc8b6;
+    --text-secondary: #968f80;
+    --text-muted: #6a6358;
+
+    --accent-primary: #8b1a12;
+    --accent-primary-hover: #b3261e;
+    --accent-glow: rgba(139, 26, 18, 0.35);
+    --accent-secondary: #a89f8a;
+    --accent-secondary-glow: rgba(168, 159, 138, 0.15);
+
+    --color-correct: #9a2018;
+    --color-correct-bg: transparent;
+    --color-error: #ffd9d0;
+    --color-error-bg: #6a0000;
+    --color-error-glow: rgba(179, 38, 30, 0.5);
+    --color-current: #e6dfcc;
+    --color-current-bg: rgba(230, 223, 204, 0.16);
+    --color-pending: #b9b2a0;
+
+    --border-color: rgba(120, 24, 18, 0.45);
+    --border-color-hover: rgba(190, 40, 30, 0.7);
+
+    --glow-1: transparent;
+    --glow-2: transparent;
+    --glow-3: transparent;
+
+    --font-sans: 'Special Elite', 'Courier New', monospace;
+    --font-mono: 'Special Elite', 'Courier New', monospace;
+
+    --radius-sm: 1px;
+    --radius-md: 2px;
+    --radius-lg: 2px;
+    --radius-xl: 3px;
+
+    font-synthesis: none;
+    background: #030303;
+    background-image: none;
+    transition: none;
+}
+
+body.theme-deepweb .bg-glow {
+    display: none;
+}
+
+body.theme-deepweb .glass-card,
+body.theme-deepweb .glass-card-mini,
+body.theme-deepweb .theme-dropdown,
+body.theme-deepweb .theme-toggle-btn,
+body.theme-deepweb .achievement-toast {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* ---------- Encabezado ---------- */
+body.theme-deepweb .logo-text {
+    color: var(--dw-bone);
+    letter-spacing: 0.04em;
+}
+
+body.theme-deepweb .logo-accent {
+    background: none;
+    -webkit-text-fill-color: var(--dw-blood);
+    color: var(--dw-blood);
+}
+
+body.theme-deepweb .logo-icon {
+    background: #1a0806;
+    color: var(--dw-blood);
+    border: 1px solid var(--dw-dried);
+}
+
+/* Aberración cromática de cinta dañada (solo en títulos, nunca en el texto del test) */
+body.theme-deepweb .logo-text,
+body.theme-deepweb .results-title,
+body.theme-deepweb .stat-value {
+    text-shadow: 2px 0 rgba(200, 20, 20, 0.45), -2px 0 rgba(40, 200, 200, 0.28);
+}
+
+body.theme-deepweb .tagline {
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+}
+
+body.theme-deepweb .lang-btn.active,
+body.theme-deepweb .lang-btn[aria-pressed="true"] {
+    background: var(--dw-dried);
+    color: var(--dw-bone);
+    box-shadow: none;
+}
+
+/* ---------- Tarjetas ---------- */
+body.theme-deepweb .glass-card,
+body.theme-deepweb .glass-card-mini {
+    border: 1px solid #3d100c;
+    box-shadow: inset 0 0 38px rgba(0, 0, 0, 0.85), 0 0 0 1px #000;
+}
+
+body.theme-deepweb .glass-card:hover {
+    border-color: #3d100c;
+}
+
+body.theme-deepweb .card-icon,
+body.theme-deepweb .results-badge {
+    background: #1a0806;
+    border: 1px solid var(--dw-dried);
+    color: var(--dw-blood);
+    box-shadow: none;
+    animation: none;
+}
+
+body.theme-deepweb .results-title,
+body.theme-deepweb .results-card.game-over-state .results-title,
+body.theme-deepweb .results-card.ghost-over-state .results-title {
+    background: none;
+    -webkit-text-fill-color: var(--dw-bone);
+    color: var(--dw-bone);
+}
+
+body.theme-deepweb .results-card.game-over-state .results-badge,
+body.theme-deepweb .results-card.ghost-over-state .results-badge {
+    background: #2a0907;
+    box-shadow: none;
+}
+
+body.theme-deepweb .result-item {
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid #3d100c;
+}
+
+body.theme-deepweb .result-highlight {
+    background: rgba(139, 26, 18, 0.12);
+    border-color: var(--dw-dried);
+}
+
+body.theme-deepweb .result-highlight .result-number {
+    background: none;
+    -webkit-text-fill-color: var(--dw-blood);
+    color: var(--dw-blood);
+}
+
+body.theme-deepweb .stat-value,
+body.theme-deepweb #wpm-display,
+body.theme-deepweb #accuracy-display,
+body.theme-deepweb #time-display {
+    color: var(--dw-rust);
+}
+
+body.theme-deepweb #lives-count,
+body.theme-deepweb #lives-stat-card .stat-value,
+body.theme-deepweb .combo-highlight,
+body.theme-deepweb #combo-count {
+    color: var(--dw-blood) !important;
+    text-shadow: none;
+}
+
+body.theme-deepweb #combo-label {
+    color: var(--text-secondary) !important;
+}
+
+body.theme-deepweb .damage-hit {
+    animation: none;
+}
+
+/* ---------- Botones ---------- */
+body.theme-deepweb .btn,
+body.theme-deepweb .btn-practice-start,
+body.theme-deepweb .btn-tutor-start {
+    background: #120807;
+    color: var(--dw-bone);
+    border: 1px solid var(--dw-dried);
+    border-radius: 1px;
+    box-shadow: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+body.theme-deepweb .btn:hover,
+body.theme-deepweb .btn-practice-start:hover,
+body.theme-deepweb .btn-tutor-start:hover {
+    background: #4a0f0b;
+    border-color: var(--dw-blood);
+    color: #f0e6d6;
+    box-shadow: none;
+}
+
+body.theme-deepweb .btn-primary {
+    background: #5a0f0b;
+    border-color: var(--dw-blood);
+    color: #f0e6d6;
+}
+
+body.theme-deepweb .btn-primary:hover {
+    background: #7a1610;
+}
+
+body.theme-deepweb .btn-diff {
+    background: #0c0605;
+    color: var(--text-secondary);
+    border: 1px solid #3d100c;
+}
+
+body.theme-deepweb .btn-diff:hover {
+    border-color: var(--dw-blood);
+    background: rgba(139, 26, 18, 0.14);
+}
+
+body.theme-deepweb .btn-diff.active,
+body.theme-deepweb .btn-diff.diff-hardcore.active {
+    background: rgba(139, 26, 18, 0.3);
+    border-color: var(--dw-blood);
+    color: var(--dw-bone);
+}
+
+body.theme-deepweb .theme-toggle-btn,
+body.theme-deepweb .achievements-toggle-btn,
+body.theme-deepweb .stats-toggle-btn,
+body.theme-deepweb .lang-switch {
+    background: #0c0605;
+    border: 1px solid var(--dw-dried);
+    color: var(--dw-bone);
+}
+
+body.theme-deepweb .card-description kbd,
+body.theme-deepweb .typing-hint kbd {
+    background: #120807;
+    border: 1px solid var(--dw-dried);
+    color: var(--dw-bone);
+    border-radius: 1px;
+}
+
+/* ---------- Campos de texto ---------- */
+body.theme-deepweb .text-input,
+body.theme-deepweb .typing-input {
+    background: #060404;
+    color: var(--dw-bone);
+    border: 1px solid #4a1410;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+body.theme-deepweb .text-input:focus,
+body.theme-deepweb .typing-input:focus {
+    border-color: var(--dw-blood);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(179, 38, 30, 0.4);
+}
+
+body.theme-deepweb .typing-input.has-error {
+    border-color: var(--dw-blood);
+    box-shadow: inset 0 0 20px rgba(120, 0, 0, 0.5);
+    animation: none;
+}
+
+/* ---------- Texto a escribir ---------- */
+body.theme-deepweb #text-display {
+    font-size: 1.4rem;
+    letter-spacing: 0.04em;
+    line-height: 1.75;
+    scrollbar-color: var(--dw-dried) transparent;
+}
+
+body.theme-deepweb #text-display::-webkit-scrollbar-thumb {
+    background: var(--dw-dried);
+}
+
+body.theme-deepweb #text-display .char {
+    transition: none;
+}
+
+/* Por escribir: hueso apagado (lo que la linterna ilumina tiene que poder leerse) */
+body.theme-deepweb #text-display .char.char-pending {
+    color: var(--color-pending);
+}
+
+/* Escrito: sangre seca, densa. */
+body.theme-deepweb #text-display .char.char-correct {
+    color: var(--dw-rust);
+}
+
+body.theme-deepweb #text-display.on-fire .char.char-correct {
+    color: var(--dw-rust) !important;
+}
+
+/* Error: mancha de sangre fresca detrás de la letra */
+body.theme-deepweb #text-display .char.char-error {
+    color: var(--color-error);
+    background-color: #6a0000;
+    background-image: linear-gradient(to bottom, transparent 55%, #9a0f0a 55%);
+    text-decoration: none;
+    animation: none;
+}
+
+/* Desalineado "pixel por pixel": desplazamientos fijos en patrones irregulares.
+   Son estáticos (no se animan ni cambian al escribir): el texto solo se coloca una vez. */
+body.theme-deepweb #text-display .char:nth-child(7n + 1) {
+    position: relative;
+    top: 1px;
+}
+
+body.theme-deepweb #text-display .char:nth-child(5n + 3) {
+    position: relative;
+    top: -1px;
+    left: 0.5px;
+}
+
+body.theme-deepweb #text-display .char:nth-child(11n + 4) {
+    position: relative;
+    top: 2px;
+}
+
+body.theme-deepweb #text-display .char:nth-child(13n + 6) {
+    position: relative;
+    left: -1px;
+}
+
+body.theme-deepweb #text-display .word:nth-of-type(4n + 2) {
+    rotate: 0.5deg;
+}
+
+body.theme-deepweb #text-display .word:nth-of-type(5n + 4) {
+    rotate: -0.6deg;
+    translate: 0 1px;
+}
+
+body.theme-deepweb #text-display .word:nth-of-type(7n) {
+    translate: 1px -1px;
+}
+
+/* ---------- Barra de progreso ---------- */
+body.theme-deepweb .progress-bar-container {
+    background: #0c0605;
+    border: 1px solid #3d100c;
+}
+
+body.theme-deepweb .progress-bar-fill {
+    background: linear-gradient(90deg, #4a0d09, #8b1a12);
+    box-shadow: none;
+}
+
+body.theme-deepweb .progress-bar-fill::after {
+    display: none;
+}
+
+body.theme-deepweb .progress-text {
+    color: var(--text-secondary);
+}
+
+/* ---------- Racha activa ---------- */
+body.theme-deepweb .typing-card.on-fire {
+    border-color: var(--dw-blood) !important;
+    box-shadow: inset 0 0 38px rgba(0, 0, 0, 0.85), 0 0 14px rgba(139, 26, 18, 0.35) !important;
+}
+
+body.theme-deepweb .typing-input.on-fire-border {
+    border-color: var(--dw-blood) !important;
+}
+
+/* ---------- Cuenta atrás ---------- */
+body.theme-deepweb .countdown-overlay {
+    background: rgba(3, 3, 3, 0.94);
+    border: 1px solid #3d100c;
+    box-shadow: none;
+}
+
+body.theme-deepweb .countdown-number,
+body.theme-deepweb .countdown-label {
+    background: none;
+    -webkit-text-fill-color: var(--dw-blood);
+    color: var(--dw-blood);
+}
+
+/* ---------- Menú de temas ---------- */
+body.theme-deepweb .theme-dropdown {
+    background: #0a0505;
+    border: 1px solid var(--dw-dried);
+}
+
+body.theme-deepweb .immersive-option:hover,
+body.theme-deepweb .immersive-option:focus-visible,
+body.theme-deepweb .immersive-sound:hover,
+body.theme-deepweb .immersive-sound:focus-visible {
+    background: rgba(139, 26, 18, 0.14);
+}
+
+body.theme-deepweb .immersive-option.active {
+    background: rgba(139, 26, 18, 0.25);
+    color: var(--dw-bone);
+    border-color: var(--dw-blood);
+}
+
+body.theme-deepweb .immersive-toast {
+    background: #0a0505;
+    border-color: var(--dw-dried);
+    box-shadow: none;
+}
+
+/* Sacudida rara del conjunto, como una señal que se pierde un instante.
+   Usa la propiedad `translate` (no `transform`: la app ya usa transform para el zoom). */
+body.theme-deepweb .app-container {
+    animation: dw-jitter 9s steps(1, end) infinite;
+}
+
+@keyframes dw-jitter {
+
+    0%,
+    100% {
+        translate: 0 0;
+    }
+
+    46% {
+        translate: 0 0;
+    }
+
+    46.6% {
+        translate: 3px 0;
+    }
+
+    47.2% {
+        translate: -2px 1px;
+    }
+
+    47.8% {
+        translate: 0 0;
+    }
+}
+
+/* ===================================================
+   Capas del tema (las crea themes/deepweb.js)
+   =================================================== */
+
+/* Linterna: oscuridad con un agujero de luz que sigue la palabra actual.
+   Solo se ve durante el test (clase dw-on). */
+.dw-dark {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    pointer-events: none;
+    display: none;
+    --dw-r: var(--dw-r0, 220px);
+    background: radial-gradient(circle at var(--dw-x) var(--dw-y),
+            rgba(3, 3, 3, 0) 0,
+            rgba(3, 3, 3, 0) calc(var(--dw-r) * 0.32),
+            rgba(3, 3, 3, 0.6) calc(var(--dw-r) * 0.72),
+            rgba(3, 3, 3, 0.965) var(--dw-r));
+    transition: --dw-x 0.22s ease-out, --dw-y 0.22s ease-out, --dw-r 0.18s ease-out;
+    animation: dw-flicker 6.1s steps(1, end) infinite;
+}
+
+.dw-dark.dw-on {
+    display: block;
+}
+
+/* Con el menú de temas abierto la oscuridad se aparta: así siempre se puede cambiar de tema */
+body.theme-deepweb:has(#theme-dropdown:not(.hidden)) .dw-dark {
+    visibility: hidden;
+}
+
+/* Sin teclear 2 s: la luz se encoge despacio hasta dejarte a oscuras */
+.dw-dark.dw-idle {
+    --dw-r: 0px;
+    transition: --dw-x 0.22s ease-out, --dw-y 0.22s ease-out, --dw-r 3.4s linear;
+}
+
+/* Al terminar bien: la linterna se abre un momento */
+.dw-dark.dw-open {
+    --dw-r: 900px;
+    transition: --dw-r 0.6s ease-out;
+}
+
+@keyframes dw-flicker {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    6% {
+        opacity: 0.9;
+    }
+
+    7% {
+        opacity: 1;
+    }
+
+    31% {
+        opacity: 1;
+    }
+
+    31.6% {
+        opacity: 0.82;
+    }
+
+    32.3% {
+        opacity: 0.96;
+    }
+
+    62% {
+        opacity: 1;
+    }
+
+    62.5% {
+        opacity: 0.88;
+    }
+
+    64% {
+        opacity: 1;
+    }
+
+    88% {
+        opacity: 0.93;
+    }
+
+    88.6% {
+        opacity: 1;
+    }
+}
+
+/* Filtro VHS: líneas de barrido + viñeta */
+.dw-vhs {
+    position: fixed;
+    inset: 0;
+    z-index: 31;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%),
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.26) 0 1px, transparent 1px 3px);
+}
+
+/* Grano de cinta: ruido que "salta" entre posiciones */
+.dw-grain {
+    position: fixed;
+    inset: -80px;
+    z-index: 32;
+    pointer-events: none;
+    opacity: 0.075;
+    background-repeat: repeat;
+    animation: dw-grain 0.6s steps(6, end) infinite;
+}
+
+@keyframes dw-grain {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    17% {
+        transform: translate(-37px, 21px);
+    }
+
+    33% {
+        transform: translate(29px, -48px);
+    }
+
+    50% {
+        transform: translate(-61px, -17px);
+    }
+
+    67% {
+        transform: translate(43px, 55px);
+    }
+
+    83% {
+        transform: translate(-13px, 62px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+/* Banda de tracking que recorre la pantalla */
+.dw-track {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 14vh;
+    z-index: 33;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, rgba(220, 220, 220, 0.045) 45%, rgba(220, 220, 220, 0.07) 55%, transparent);
+    opacity: 0;
+    animation: dw-track 11s linear infinite;
+}
+
+@keyframes dw-track {
+    0% {
+        transform: translateY(-20vh);
+        opacity: 0;
+    }
+
+    8% {
+        opacity: 1;
+    }
+
+    92% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(105vh);
+        opacity: 0;
+    }
+}
+
+/* Destello invertido (solo "modo con sustos"): un único pulso corto */
+.dw-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 9990;
+    pointer-events: none;
+    background: #fff;
+    mix-blend-mode: difference;
+    opacity: 0;
+}
+
+/* Pulso rojo tenue ("modo suave" / movimiento reducido): sin cambio brusco de luminosidad */
+.dw-pulse {
+    position: fixed;
+    inset: 0;
+    z-index: 9989;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(120, 0, 0, 0.55) 100%);
+}
+
+/* Rostro oculto en la estática (solo "modo con sustos") */
+.dw-face {
+    position: fixed;
+    inset: 0;
+    z-index: 9991;
+    pointer-events: none;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.dw-face-img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(46vh, 62vw);
+    height: min(60vh, 80vw);
+    margin: calc(min(60vh, 80vw) / -2) 0 0 calc(min(46vh, 62vw) / -2);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: grayscale(1) contrast(1.25) blur(0.6px);
+    opacity: 0.8;
+}
+
+.dw-face-static {
+    position: absolute;
+    inset: -80px;
+    background-repeat: repeat;
+    opacity: 0.5;
+}
+
+/* Pantalla "sin señal" al perder */
+.dw-signal {
+    position: fixed;
+    inset: 0;
+    z-index: 9992;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #050505;
+    opacity: 0;
+}
+
+.dw-signal-static {
+    position: absolute;
+    inset: -80px;
+    background-repeat: repeat;
+    opacity: 0.55;
+}
+
+.dw-signal-text {
+    position: relative;
+    padding: 6px 22px;
+    background: #000;
+    color: #e8e8e8;
+    font-family: 'Special Elite', 'Courier New', monospace;
+    font-size: clamp(1.6rem, 6vw, 3.4rem);
+    letter-spacing: 0.25em;
+}
+
+/* ---------- Advertencia previa (se muestra ANTES de activar el tema) ---------- */
+.dw-warn {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.82);
+}
+
+.dw-warn-box {
+    width: min(520px, 100%);
+    padding: 24px 24px 20px;
+    background: #0a0505;
+    color: #cfc8b6;
+    border: 1px solid #6f1510;
+    box-shadow: 0 0 0 1px #000, 0 12px 40px rgba(0, 0, 0, 0.7);
+    font-family: 'Courier New', monospace;
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
+.dw-warn-title {
+    margin: 0 0 10px;
+    color: #d8362b;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.dw-warn-text {
+    margin: 0 0 18px;
+}
+
+.dw-warn-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dw-warn-btn {
+    padding: 11px 14px;
+    background: #140808;
+    color: #cfc8b6;
+    border: 1px solid #6f1510;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dw-warn-btn:hover,
+.dw-warn-btn:focus-visible {
+    background: #4a0f0b;
+    border-color: #b3261e;
+    outline: none;
+}
+
+.dw-warn-btn.dw-warn-primary {
+    background: #5a0f0b;
+    border-color: #b3261e;
+    color: #f0e6d6;
+}
+
+.dw-warn-btn.dw-warn-cancel {
+    background: transparent;
+    border-color: #3d100c;
+    color: #968f80;
+}
+
+/* ---------- Accesibilidad: sin movimiento extra ---------- */
+@media (prefers-reduced-motion: reduce) {
+
+    .dw-dark,
+    .dw-grain,
+    .dw-track,
+    body.theme-deepweb .app-container {
+        animation: none;
+    }
+
+    .dw-track {
+        display: none;
+    }
+}
