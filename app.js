@@ -103,6 +103,7 @@
     const achievementsProgressScore = document.getElementById('achievements-progress-score');
     const achievementsBarFill = document.getElementById('achievements-bar-fill');
     const achievementsGrid = document.getElementById('achievements-grid');
+    const achievementsReset = document.getElementById('achievements-reset');
     const achCatButtons = document.querySelectorAll('.ach-cat-btn');
     const achievementContainer = document.getElementById('achievement-container');
     // Tutor Mode DOM elements
@@ -481,6 +482,7 @@
         // --- Sistema de Logros: Inicialización & Eventos de Modal ---
         loadAchievementsFromStorage();
         updateAchievementsBadge();
+        if (achievementsReset) achievementsReset.addEventListener('click', resetAchievements);
 
         if (achievementsToggle) {
             achievementsToggle.addEventListener('click', () => {
@@ -1868,21 +1870,152 @@
     if (window.SpeedStats) window.SpeedStats.setAchievementsProvider(() => ACHIEVEMENTS_LIST);
 
     // ===== ACHIEVEMENTS HELPERS & STORAGE =====
+    // Integridad: los logros y las estadísticas de usuario se guardan con una firma. Si alguien edita
+    // localStorage a mano (consola, extensión...) la firma deja de coincidir y se reinicia el progreso.
+    // OJO: es una barrera, no un candado — el código es público y quien lo lea puede recalcular la firma.
+    const ACH_KEY = 'speedtype-achievements-data';
+    const ACH_SIG_KEY = 'speedtype-achievements-sig';
+    const USER_STATS_KEY = 'speedtype-user-stats';
+    const ACH_SALT = 'ispeedtype/logros/v2';
+    // Datos sin firma + historial vacío: false = se aceptan los logros que no se pueden comprobar (no se
+    // pierde progreso de quien reinició su historial); true = se revocan (cierra el truco de borrar la
+    // firma y vaciar el historial, pero borra logros legítimos de quien reinició el historial).
+    const ACH_STRICT_LEGACY = false;
+
+    // Hash síncrono de 53 bits (cyrb53)
+    function achHash(str) {
+        let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+        for (let i = 0; i < str.length; i++) {
+            const ch = str.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+        return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+    }
+
+    function currentAchSignature() {
+        return achHash(ACH_SALT + '|' + (localStorage.getItem(ACH_KEY) || '') + '|' + (localStorage.getItem(USER_STATS_KEY) || ''));
+    }
+
+    function writeAchSignature() {
+        localStorage.setItem(ACH_SIG_KEY, currentAchSignature());
+    }
+
+    // true = firma válida · false = datos manipulados · null = sin firma (datos antiguos o primera visita)
+    function checkAchSignature() {
+        try {
+            const sig = localStorage.getItem(ACH_SIG_KEY);
+            if (sig === null) return null;
+            return sig === currentAchSignature();
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Escritura directa (sin comprobar la firma antes); siempre deja la firma al día
+    function persistAchievements() {
+        const data = {};
+        ACHIEVEMENTS_LIST.forEach(a => {
+            if (a.completado) data[a.id] = { completado: true, fecha: a.fecha };
+        });
+        localStorage.setItem(ACH_KEY, JSON.stringify(data));
+        writeAchSignature();
+    }
+
+    function persistUserStats() {
+        localStorage.setItem(USER_STATS_KEY, JSON.stringify(userStats));
+        writeAchSignature();
+    }
+
+    // Deja todos los logros y el progreso asociado (pruebas completadas, mejor racha, modos) en cero
+    function wipeAchievements() {
+        ACHIEVEMENTS_LIST.forEach(a => { a.completado = false; a.fecha = null; });
+        userStats = { testsCompleted: 0, maxWordStreak: 0, modesDone: {} };
+        try {
+            persistAchievements();
+            persistUserStats();
+        } catch (e) {
+            console.warn('Error resetting achievements:', e);
+        }
+        try {
+            updateAchievementsBadge();
+            renderAchievementsGrid();
+        } catch (e) { /* la interfaz aún puede no estar lista */ }
+    }
+
+    function resetAchievements() {
+        if (!window.confirm(tr('ach.confirmReset'))) return;
+        wipeAchievements();
+    }
+
+    // Antes de cada guardado: si alguien tocó los datos mientras la página estaba abierta, se reinicia
+    function guardAchievementIntegrity() {
+        if (checkAchSignature() === false) {
+            console.warn('Logros: datos modificados fuera del juego; se reinicia el progreso.');
+            wipeAchievements();
+            return false;
+        }
+        return true;
+    }
+
+    // Para datos antiguos SIN firma: ¿los respaldan las estadísticas y el historial guardados?
+    // Se usa una sola vez (luego los datos quedan firmados) y solo revoca lo que es imposible.
+    function isAchievementBacked(id) {
+        const total = userStats.testsCompleted || 0;
+        const rung = (ladder) => ladder.find(r => r[1] === id);
+        let r;
+        if ((r = rung(LADDER_RACHAS))) return userStats.maxWordStreak >= r[0];
+        if ((r = rung(LADDER_TESTS))) return total >= r[0];
+        if (total < 1) return false; // sin ninguna prueba completada no puede haber logros
+
+        const h = window.SpeedStats ? window.SpeedStats.getHistory() : [];
+        if (h.length >= 1000) return true;                // historial recortado: la evidencia antigua ya no está
+        if (!h.length) return !ACH_STRICT_LEGACY;         // historial vacío (¿lo reinició el jugador?): no se puede comprobar
+        const ok = h.filter(e => e.result === 'ok');
+        const some = (fn) => ok.some(fn);
+
+        if ((r = rung(LADDER_WPM))) return some(e => e.wpm >= r[0]);
+        if (id === 'wpm-110') return some(e => e.wpm > WPM_ULTRA);
+        if ((r = rung(LADDER_PRECISION))) return some(e => e.acc === 100 && e.words >= r[0]);
+        if ((r = rung(LADDER_DIAS))) return !window.SpeedStats || window.SpeedStats.dayStreaks().best >= r[0];
+        if (id.indexOf('survivor-') === 0) return some(e => e.mode === 'vidas');
+        if (id.indexOf('fade-') === 0) return some(e => e.mode === 'desvanecer');
+        if (id.indexOf('storm-') === 0) return some(e => e.mode === 'tormenta');
+        if (id.indexOf('dead-') === 0) return some(e => e.mode === 'punto-muerto');
+        if (id === 'todoterreno') {
+            const d = userStats.modesDone || {};
+            return !!(d.vidas && d.desvanecer && d.tormenta && d.punto);
+        }
+        return true; // p. ej. 'tutor-master': sin evidencia en el historial
+    }
+
     function loadAchievementsFromStorage() {
         try {
-            const stored = localStorage.getItem('speedtype-achievements-data');
+            const sigState = checkAchSignature();
+            if (sigState === false) {
+                console.warn('Logros: datos modificados fuera del juego; se reinicia el progreso.');
+                wipeAchievements();
+                return;
+            }
+
+            const stored = localStorage.getItem(ACH_KEY);
+            let revoked = false;
             if (stored) {
                 const data = JSON.parse(stored);
                 Object.keys(data).forEach(savedId => {
                     if (!data[savedId] || !data[savedId].completado) return;
-                    const target = ACHIEVEMENTS_LIST.find(a => a.id === (LEGACY_ACH_ALIASES[savedId] || savedId));
-                    if (target && !target.completado) {
-                        target.completado = true;
-                        target.fecha = data[savedId].fecha || null;
-                    }
+                    const id = LEGACY_ACH_ALIASES[savedId] || savedId;
+                    const target = ACHIEVEMENTS_LIST.find(a => a.id === id);
+                    if (!target || target.completado) return;
+                    if (sigState === null && !isAchievementBacked(id)) { revoked = true; return; }
+                    target.completado = true;
+                    target.fecha = data[savedId].fecha || null;
                 });
             }
             migrateAchievementProgress();
+            if (sigState === null || revoked) saveAchievementsToStorage(); // firma lo ya validado
         } catch (e) {
             console.warn('Error loading achievements from storage:', e);
         }
@@ -1921,16 +2054,8 @@
 
     function saveAchievementsToStorage() {
         try {
-            const data = {};
-            ACHIEVEMENTS_LIST.forEach(ach => {
-                if (ach.completado) {
-                    data[ach.id] = {
-                        completado: true,
-                        fecha: ach.fecha
-                    };
-                }
-            });
-            localStorage.setItem('speedtype-achievements-data', JSON.stringify(data));
+            if (!guardAchievementIntegrity()) return;
+            persistAchievements();
         } catch (e) {
             console.warn('Error saving achievements to storage:', e);
         }
@@ -1938,7 +2063,8 @@
 
     function saveUserStats() {
         try {
-            localStorage.setItem('speedtype-user-stats', JSON.stringify(userStats));
+            if (!guardAchievementIntegrity()) return;
+            persistUserStats();
         } catch (e) {
             console.warn('Error saving user stats:', e);
         }
@@ -2008,9 +2134,10 @@
             return;
         }
 
-        // Doble verificación directa contra localStorage
+        // Doble verificación contra localStorage (otra pestaña pudo desbloquearlo ya),
+        // pero solo si los datos guardados tienen la firma válida
         try {
-            const raw = localStorage.getItem('speedtype-achievements-data');
+            const raw = checkAchSignature() === true ? localStorage.getItem(ACH_KEY) : null;
             if (raw) {
                 const parsed = JSON.parse(raw);
                 if (parsed[id] && parsed[id].completado === true) {

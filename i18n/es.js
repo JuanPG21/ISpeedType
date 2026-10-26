@@ -127,6 +127,8 @@
     "ui.achievements-subtitle": "Progreso y retos de mecanografía",
     "attr.achievements-close": "Cerrar modal",
     "ui.achievements-progress-label": "Progreso Total",
+    "ui.achievements-reset": "Reiniciar logros",
+    "ach.confirmReset": "¿Reiniciar todos los logros y el progreso asociado (pruebas completadas y mejor racha)?\n\nEl historial de partidas NO se borra.",
     "ui.cat-all": "Todos",
     "ui.cat-streaks": "🔥 Rachas",
     "ui.cat-speed": "⚡ Velocidad",
