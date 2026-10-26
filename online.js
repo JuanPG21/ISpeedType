@@ -6,7 +6,7 @@
 
     // URL del backend. Tras `npm run deploy` en /server, Wrangler imprime la URL real:
     // reemplazar TU-SUBDOMINIO por el que aparezca (https://ispeedtype-api.<algo>.workers.dev)
-    const PROD_API = 'https://ispeedtype-api.TU-SUBDOMINIO.workers.dev';
+    const PROD_API = 'https://ispeedtype-api.jpgongora721.workers.dev';
     const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
     const API = window.ISPEEDTYPE_API || (isLocal ? 'http://127.0.0.1:8787' : PROD_API);
     const WS = API.replace(/^http/, 'ws');
